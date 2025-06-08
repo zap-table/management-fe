@@ -44,8 +44,10 @@ export function LoginForm() {
           <div className="flex justify-center mb-4">
             <ChefHat className="h-12 w-12 text-primary" />
           </div>
-          <CardTitle className="text-2xl">RestaurantOS</CardTitle>
-          <CardDescription>Sign in to manage your restaurant</CardDescription>
+          <CardTitle className="text-2xl">Zap Table</CardTitle>
+          <CardDescription>
+            Faça login para gerir os seus restaurantes{" "}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

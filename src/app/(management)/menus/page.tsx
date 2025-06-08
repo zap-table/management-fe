@@ -1,26 +1,36 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Plus, Pencil, Trash, Check, ChevronsUpDown, X } from 'lucide-react';
-import { toast } from 'sonner';
-import { DataTable } from '@/components/ui/data-table';
-import { Button } from '@/components/ui/button';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import { DataTable } from "@/components/ui/data-table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Heading } from '@/components/ui/heading';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
+} from "@/components/ui/dialog";
+import { Heading } from "@/components/ui/heading";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { Menu, Category, Product } from '@/types';
+import { Category, Menu, Product } from "@/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Check, ChevronsUpDown, Pencil, Plus, Trash, X } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface MenuWithRelations extends Menu {
   categories: (Category & {
@@ -34,40 +44,50 @@ interface ProductWithRelations extends Product {
 
 export default function MenusPage() {
   const [open, setOpen] = useState(false);
-  const [editingMenu, setEditingMenu] = useState<MenuWithRelations | null>(null);
+  const [editingMenu, setEditingMenu] = useState<MenuWithRelations | null>(
+    null
+  );
   const queryClient = useQueryClient();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
-  const [categoryProducts, setCategoryProducts] = useState<Record<number, number[]>>({});
+  const [categoryProducts, setCategoryProducts] = useState<
+    Record<number, number[]>
+  >({});
   const [categorySearchOpen, setCategorySearchOpen] = useState(false);
 
   // Fetch Menus
-  const { data: menus = [], isLoading: isLoadingMenus } = useQuery<MenuWithRelations[]>({
-    queryKey: ['menus'],
+  const { data: menus = [], isLoading: isLoadingMenus } = useQuery<
+    MenuWithRelations[]
+  >({
+    queryKey: ["menus"],
     queryFn: async () => {
-      const response = await fetch('/api/menus');
-      if (!response.ok) throw new Error('Failed to fetch menus');
+      const response = await fetch("/api/menus");
+      if (!response.ok) throw new Error("Failed to fetch menus");
       return response.json();
     },
   });
 
   // Fetch Categories with Products
-  const { data: categories = [], isLoading: isLoadingCategories } = useQuery<Category[]>({
-    queryKey: ['categories'],
+  const { data: categories = [], isLoading: isLoadingCategories } = useQuery<
+    Category[]
+  >({
+    queryKey: ["categories"],
     queryFn: async () => {
-      const response = await fetch('/api/categories');
-      if (!response.ok) throw new Error('Failed to fetch categories');
+      const response = await fetch("/api/categories");
+      if (!response.ok) throw new Error("Failed to fetch categories");
       return response.json();
     },
   });
 
   // Fetch Products
-  const { data: products = [], isLoading: isLoadingProducts } = useQuery<ProductWithRelations[]>({
-    queryKey: ['products'],
+  const { data: products = [], isLoading: isLoadingProducts } = useQuery<
+    ProductWithRelations[]
+  >({
+    queryKey: ["products"],
     queryFn: async () => {
-      const response = await fetch('/api/products');
-      if (!response.ok) throw new Error('Failed to fetch products');
+      const response = await fetch("/api/products");
+      if (!response.ok) throw new Error("Failed to fetch products");
       return response.json();
     },
   });
@@ -83,12 +103,12 @@ export default function MenusPage() {
         products: number[];
       }[];
     }) => {
-      const method = data.id ? 'PUT' : 'POST';
-      const url = data.id ? `/api/menus/${data.id}` : '/api/menus';
-      
+      const method = data.id ? "PUT" : "POST";
+      const url = data.id ? `/api/menus/${data.id}` : "/api/menus";
+
       const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
@@ -97,9 +117,9 @@ export default function MenusPage() {
         let errorMessage;
         try {
           const errorJson = JSON.parse(errorData);
-          errorMessage = errorJson.message || 'Erro ao salvar menu';
+          errorMessage = errorJson.message || "Erro ao salvar menu";
         } catch {
-          errorMessage = 'Erro ao salvar menu';
+          errorMessage = "Erro ao salvar menu";
         }
         throw new Error(errorMessage);
       }
@@ -108,12 +128,16 @@ export default function MenusPage() {
       try {
         return JSON.parse(responseData);
       } catch {
-        throw new Error('Resposta inválida do servidor');
+        throw new Error("Resposta inválida do servidor");
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['menus'] });
-      toast.success(editingMenu ? 'Menu atualizado com sucesso!' : 'Menu criado com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ["menus"] });
+      toast.success(
+        editingMenu
+          ? "Menu atualizado com sucesso!"
+          : "Menu criado com sucesso!"
+      );
       setOpen(false);
       setEditingMenu(null);
       resetForm();
@@ -124,8 +148,8 @@ export default function MenusPage() {
   });
 
   const resetForm = () => {
-    setName('');
-    setDescription('');
+    setName("");
+    setDescription("");
     setSelectedCategories([]);
     setCategoryProducts({});
   };
@@ -151,7 +175,7 @@ export default function MenusPage() {
       const newProducts = currentProducts.includes(productId)
         ? currentProducts.filter((id) => id !== productId)
         : [...currentProducts, productId];
-      
+
       return {
         ...prev,
         [categoryId]: newProducts,
@@ -161,13 +185,13 @@ export default function MenusPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (selectedCategories.length === 0) {
-      toast.error('Selecione pelo menos uma categoria');
+      toast.error("Selecione pelo menos uma categoria");
       return;
     }
 
-    const categoriesWithProducts = selectedCategories.map(categoryId => ({
+    const categoriesWithProducts = selectedCategories.map((categoryId) => ({
       category_id: categoryId,
       products: categoryProducts[categoryId] || [],
     }));
@@ -185,49 +209,52 @@ export default function MenusPage() {
     setEditingMenu(menu);
     setName(menu.name);
     setDescription(menu.description);
-    setSelectedCategories(menu.categories.map(c => c.id));
+    setSelectedCategories(menu.categories.map((c) => c.id));
     setCategoryProducts(
-      menu.categories.reduce((acc, category) => ({
-        ...acc,
-        [category.id]: category.products.map(p => p.id)
-      }), {})
+      menu.categories.reduce(
+        (acc, category) => ({
+          ...acc,
+          [category.id]: category.products.map((p) => p.id),
+        }),
+        {}
+      )
     );
     setOpen(true);
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Tem certeza que deseja excluir este menu?')) return;
+    if (!confirm("Tem certeza que deseja excluir este menu?")) return;
 
     try {
       const response = await fetch(`/api/menus/${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
-      if (!response.ok) throw new Error('Failed to delete menu');
+      if (!response.ok) throw new Error("Failed to delete menu");
 
-      queryClient.invalidateQueries({ queryKey: ['menus'] });
-      toast.success('Menu excluído com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ["menus"] });
+      toast.success("Menu excluído com sucesso!");
     } catch (error) {
-      console.error('Erro ao excluir menu:', error);
-      toast.error('Erro ao excluir menu');
+      console.error("Erro ao excluir menu:", error);
+      toast.error("Erro ao excluir menu");
     }
   };
 
   const columns = [
     {
-      accessorKey: 'name',
-      header: 'Nome',
+      accessorKey: "name",
+      header: "Nome",
     },
     {
-      accessorKey: 'description',
-      header: 'Descrição',
+      accessorKey: "description",
+      header: "Descrição",
     },
     {
-      accessorKey: 'categories',
-      header: 'Categorias',
+      accessorKey: "categories",
+      header: "Categorias",
       cell: ({ row }: { row: { original: MenuWithRelations } }) => (
         <div className="flex flex-wrap gap-1">
-          {row.original.categories.map(category => (
+          {row.original.categories.map((category) => (
             <Badge key={category.id} variant="secondary">
               {category.name} ({category.products.length})
             </Badge>
@@ -236,7 +263,7 @@ export default function MenusPage() {
       ),
     },
     {
-      id: 'actions',
+      id: "actions",
       cell: ({ row }: { row: { original: MenuWithRelations } }) => (
         <div className="flex items-center gap-2">
           <Button
@@ -263,26 +290,25 @@ export default function MenusPage() {
   }
 
   return (
-    <div className="p-6">
+    <section className="w-full p-4">
       <div className="flex items-center justify-between mb-8">
-        <Heading title="Menus" description="Gerencie os menus do seu cardápio" />
+        <Heading
+          title="Menus"
+          description="Gerencie os menus do seu cardápio"
+        />
         <Button onClick={() => setOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Adicionar Menu
         </Button>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={menus}
-        searchKey="name"
-      />
+      <DataTable columns={columns} data={menus} searchKey="name" />
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {editingMenu ? 'Editar Menu' : 'Novo Menu'}
+              {editingMenu ? "Editar Menu" : "Novo Menu"}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -296,7 +322,7 @@ export default function MenusPage() {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="description">Descrição</Label>
               <Textarea
@@ -310,7 +336,10 @@ export default function MenusPage() {
 
             <div className="space-y-2">
               <Label>Categorias e Produtos</Label>
-              <Popover open={categorySearchOpen} onOpenChange={setCategorySearchOpen}>
+              <Popover
+                open={categorySearchOpen}
+                onOpenChange={setCategorySearchOpen}
+              >
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-between">
                     Selecionar categorias
@@ -346,7 +375,7 @@ export default function MenusPage() {
               {/* Lista de categorias selecionadas e seus produtos */}
               <div className="mt-4 space-y-4">
                 {selectedCategories.map((categoryId) => {
-                  const category = categories.find(c => c.id === categoryId);
+                  const category = categories.find((c) => c.id === categoryId);
                   if (!category) return null;
 
                   return (
@@ -361,26 +390,34 @@ export default function MenusPage() {
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-2">
                         {products
-                          .filter(product => product.categories.some(c => c.id === categoryId))
-                          .map(product => (
+                          .filter((product) =>
+                            product.categories.some((c) => c.id === categoryId)
+                          )
+                          .map((product) => (
                             <button
                               key={product.id}
                               type="button"
                               className={cn(
                                 "flex items-center gap-2 p-2 rounded border cursor-pointer w-full text-left",
-                                categoryProducts[categoryId]?.includes(product.id)
+                                categoryProducts[categoryId]?.includes(
+                                  product.id
+                                )
                                   ? "bg-primary/10 border-primary"
                                   : "hover:bg-muted"
                               )}
-                              onClick={() => toggleProduct(categoryId, product.id)}
+                              onClick={() =>
+                                toggleProduct(categoryId, product.id)
+                              }
                             >
                               <Check
                                 className={cn(
                                   "h-4 w-4",
-                                  categoryProducts[categoryId]?.includes(product.id)
+                                  categoryProducts[categoryId]?.includes(
+                                    product.id
+                                  )
                                     ? "opacity-100"
                                     : "opacity-0"
                                 )}
@@ -403,16 +440,13 @@ export default function MenusPage() {
               >
                 Cancelar
               </Button>
-              <Button
-                type="submit"
-                disabled={mutation.isPending}
-              >
-                {mutation.isPending ? 'A gravar...' : 'Guardar'}
+              <Button type="submit" disabled={mutation.isPending}>
+                {mutation.isPending ? "A gravar..." : "Guardar"}
               </Button>
             </div>
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+    </section>
   );
-} 
+}

@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   Table,
   TableBody,
@@ -64,7 +64,7 @@ export default function BusinessesPage() {
 
   if (user?.role !== "owner") {
     return (
-      <SidebarInset>
+      <>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
           <div className="flex flex-1 items-center gap-2">
@@ -78,7 +78,7 @@ export default function BusinessesPage() {
             </CardContent>
           </Card>
         </div>
-      </SidebarInset>
+      </>
     );
   }
 
@@ -130,14 +130,7 @@ export default function BusinessesPage() {
   };
 
   return (
-    <SidebarInset>
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-        <SidebarTrigger className="-ml-1" />
-        <div className="flex flex-1 items-center gap-2">
-          <h1 className="text-lg font-semibold">Businesses</h1>
-        </div>
-      </header>
-
+    <>
       <div className="flex flex-1 flex-col gap-4 p-4">
         <Card>
           <CardHeader>
@@ -289,6 +282,6 @@ export default function BusinessesPage() {
           </CardContent>
         </Card>
       </div>
-    </SidebarInset>
+    </>
   );
 }

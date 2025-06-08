@@ -9,6 +9,7 @@ import {
   Package,
   Settings,
   ShoppingCart,
+  Store,
   TableIcon,
   Tags,
   User,
@@ -46,6 +47,11 @@ const ownerMenuItems = [
     url: "/businesses",
     icon: Building2,
   },
+  {
+    title: "Restaurantes",
+    url: "/restaurants",
+    icon: Store,
+  },
 ];
 
 const menuItems = [
@@ -66,7 +72,7 @@ const menuItems = [
   },
   {
     title: "Refeições",
-    url: "/products",
+    url: "/meals",
     icon: ShoppingCart,
   },
   {
@@ -104,9 +110,9 @@ export function AppSidebar() {
 
       <Separator />
 
-      <SidebarContent>
+      <SidebarContent className="gap-0">
         {showOwnerItems ? (
-          <SidebarGroup>
+          <SidebarGroup className="py-0">
             <SidebarGroupLabel>Gestão do Negócio</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -128,7 +134,7 @@ export function AppSidebar() {
           </SidebarGroup>
         ) : null}
 
-        <SidebarGroup>
+        <SidebarGroup className="py-0">
           <SidebarGroupLabel>Gestão do restaurante</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>

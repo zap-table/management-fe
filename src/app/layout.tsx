@@ -1,4 +1,4 @@
-import { AppSidebar } from "@/components/layout/app-sidebar";
+import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import type { Metadata } from "next";
 import { Geist_Mono } from "next/font/google";
 import { Providers } from "../providers/providers";
