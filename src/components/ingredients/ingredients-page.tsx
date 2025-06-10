@@ -1,5 +1,6 @@
 "use client";
 
+import DashboardSection from "@/components/layout/dashboard-section";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { Heading } from "@/components/ui/heading";
@@ -7,66 +8,67 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import DashboardSection from "../layout/dashboard-section";
-import { CategoryDialog } from "./categories-dialog";
+import { IngredientEditor } from "./ingredients-editor";
 
-interface Category {
+interface Ingredient {
   id: string;
   name: string;
   description: string;
-  order: number;
+  photo?: string;
 }
 
-export default function CategoriesPage() {
+export default function Ingredients() {
   const [open, setOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(
+    null
+  );
   const queryClient = useQueryClient();
 
-  const { data: categories = [], isLoading } = useQuery({
-    queryKey: ["categories"],
+  const { data: ingredients = [], isLoading } = useQuery({
+    queryKey: ["ingredients"],
     queryFn: async () => {
-      const response = await fetch("/api/categories");
-      if (!response.ok) throw new Error("Failed to fetch categories");
+      const response = await fetch("/api/ingredients");
+      if (!response.ok) throw new Error("Failed to fetch ingredients");
       return response.json();
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/categories/${id}`, {
+      const response = await fetch(`/api/ingredients/${id}`, {
         method: "DELETE",
       });
 
-      if (!response.ok) throw new Error("Failed to delete category");
+      if (!response.ok) throw new Error("Failed to delete ingredient");
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-      toast.success("Categoria excluída com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["ingredients"] });
+      toast.success("Ingrediente excluído com sucesso!");
     },
     onError: (error: Error) => {
-      console.error("Erro ao excluir categoria:", error);
-      toast.error("Erro ao excluir categoria");
+      console.error("Erro ao excluir ingrediente:", error);
+      toast.error("Erro ao excluir ingrediente");
     },
   });
 
-  const handleEdit = (category: Category) => {
-    setEditingCategory(category);
+  const handleEdit = (ingredient: Ingredient) => {
+    setEditingIngredient(ingredient);
     setOpen(true);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir esta categoria?")) return;
+    if (!confirm("Tem certeza que deseja excluir este ingrediente?")) return;
     deleteMutation.mutate(id);
   };
 
   const handleAddNew = () => {
-    setEditingCategory(null);
+    setEditingIngredient(null);
     setOpen(true);
   };
 
   const handleDialogSuccess = () => {
-    setEditingCategory(null);
+    setEditingIngredient(null);
   };
 
   const columns = [
@@ -79,27 +81,23 @@ export default function CategoriesPage() {
       header: "Descrição",
     },
     {
-      accessorKey: "order",
-      header: "Ordem",
-    },
-    {
       id: "actions",
-      cell: ({ row }: { row: { original: Category } }) => {
-        const category = row.original;
+      cell: ({ row }: { row: { original: Ingredient } }) => {
+        const ingredient = row.original;
 
         return (
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => handleEdit(category)}
+              onClick={() => handleEdit(ingredient)}
             >
               <Pencil className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => handleDelete(category.id)}
+              onClick={() => handleDelete(ingredient.id)}
               disabled={deleteMutation.isPending}
             >
               <Trash className="h-4 w-4" />
@@ -116,21 +114,21 @@ export default function CategoriesPage() {
     <DashboardSection>
       <div className="flex items-center justify-between mb-4">
         <Heading
-          title="Categorias"
-          description="Gerencie as categorias do seu cardápio"
+          title="Ingredientes"
+          description="Gerencie os ingredientes do seu cardápio"
         />
         <Button onClick={handleAddNew}>
           <Plus className="mr-2 h-4 w-4" />
-          Adicionar Categoria
+          Adicionar Ingrediente
         </Button>
       </div>
 
-      <DataTable columns={columns} data={categories} searchKey="name" />
+      <DataTable columns={columns} data={ingredients} searchKey="name" />
 
-      <CategoryDialog
+      <IngredientEditor
         open={open}
         onOpenChange={setOpen}
-        editingCategory={editingCategory}
+        editingIngredient={editingIngredient}
         onSuccess={handleDialogSuccess}
       />
     </DashboardSection>

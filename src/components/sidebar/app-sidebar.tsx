@@ -2,13 +2,14 @@
 
 import {
   Building2,
+  CarrotIcon,
   ChefHat,
+  CookingPot,
+  HandPlatter,
   Home,
   LogOut,
-  Menu,
-  Package,
+  NotebookIcon,
   Settings,
-  ShoppingCart,
   Store,
   TableIcon,
   Tags,
@@ -68,22 +69,27 @@ const menuItems = [
   {
     title: "Ingredientes",
     url: "/ingredients",
-    icon: Package,
+    icon: CarrotIcon,
   },
   {
     title: "Refeições",
     url: "/meals",
-    icon: ShoppingCart,
+    icon: CookingPot,
   },
   {
     title: "Menus",
     url: "/menus",
-    icon: Menu,
+    icon: NotebookIcon,
   },
   {
     title: "Mesas",
     url: "/tables",
     icon: TableIcon,
+  },
+  {
+    title: "Pedidos",
+    url: "/requests",
+    icon: HandPlatter,
   },
 ];
 

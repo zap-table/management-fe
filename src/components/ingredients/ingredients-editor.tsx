@@ -24,49 +24,47 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-interface Category {
+interface Ingredient {
   id: string;
   name: string;
   description: string;
-  order: number;
+  photo?: string;
 }
 
-interface CategoryDialogProps {
+interface IngredientEditorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  editingCategory: Category | null;
+  editingIngredient: Ingredient | null;
   onSuccess?: () => void;
 }
 
-const categorySchema = z.object({
+const ingredientSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   description: z.string().min(1, "Descrição é obrigatória"),
-  order: z.number().min(0, "Ordem deve ser maior ou igual a 0"),
 });
 
-type CategoryFormValues = z.infer<typeof categorySchema>;
+type IngredientFormValues = z.infer<typeof ingredientSchema>;
 
-export function CategoryDialog({
+export function IngredientEditor({
   open,
   onOpenChange,
-  editingCategory,
+  editingIngredient,
   onSuccess,
-}: CategoryDialogProps) {
+}: IngredientEditorProps) {
   const queryClient = useQueryClient();
 
-  const form = useForm<CategoryFormValues>({
-    resolver: zodResolver(categorySchema),
+  const form = useForm<IngredientFormValues>({
+    resolver: zodResolver(ingredientSchema),
     defaultValues: {
       name: "",
       description: "",
-      order: 0,
     },
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: CategoryFormValues & { id?: string }) => {
+    mutationFn: async (data: IngredientFormValues & { id?: string }) => {
       const method = data.id ? "PUT" : "POST";
-      const url = data.id ? `/api/categories/${data.id}` : "/api/categories";
+      const url = data.id ? `/api/ingredients/${data.id}` : "/api/ingredients";
 
       const response = await fetch(url, {
         method,
@@ -79,9 +77,9 @@ export function CategoryDialog({
         let errorMessage;
         try {
           const errorJson = JSON.parse(errorData);
-          errorMessage = errorJson.message || "Erro ao salvar categoria";
+          errorMessage = errorJson.message || "Erro ao salvar ingrediente";
         } catch {
-          errorMessage = "Erro ao salvar categoria";
+          errorMessage = "Erro ao salvar ingrediente";
         }
         throw new Error(errorMessage);
       }
@@ -94,11 +92,11 @@ export function CategoryDialog({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      queryClient.invalidateQueries({ queryKey: ["ingredients"] });
       toast.success(
-        editingCategory
-          ? "Categoria atualizada com sucesso!"
-          : "Categoria criada com sucesso!"
+        editingIngredient
+          ? "Ingrediente atualizado com sucesso!"
+          : "Ingrediente criado com sucesso!"
       );
       onOpenChange(false);
       form.reset();
@@ -109,28 +107,27 @@ export function CategoryDialog({
     },
   });
 
-  const onSubmit = (data: CategoryFormValues) => {
+  const onSubmit = (data: IngredientFormValues) => {
     mutation.mutate({
       ...data,
-      id: editingCategory?.id,
+      id: editingIngredient?.id,
     });
   };
 
+  // Reset form when dialog opens/closes or editing ingredient changes
   useEffect(() => {
-    if (open && editingCategory) {
+    if (open && editingIngredient) {
       form.reset({
-        name: editingCategory.name,
-        description: editingCategory.description,
-        order: editingCategory.order,
+        name: editingIngredient.name,
+        description: editingIngredient.description,
       });
     } else if (open) {
       form.reset({
         name: "",
         description: "",
-        order: 0,
       });
     }
-  }, [open, editingCategory, form]);
+  }, [open, editingIngredient, form]);
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
@@ -144,7 +141,7 @@ export function CategoryDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {editingCategory ? "Editar Categoria" : "Nova Categoria"}
+            {editingIngredient ? "Editar Ingrediente" : "Novo Ingrediente"}
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
@@ -157,7 +154,7 @@ export function CategoryDialog({
                   <FormLabel>Nome</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Digite o nome da categoria"
+                      placeholder="Digite o nome do ingrediente"
                       {...field}
                     />
                   </FormControl>
@@ -173,27 +170,8 @@ export function CategoryDialog({
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Digite a descrição da categoria"
+                      placeholder="Digite a descrição do ingrediente"
                       {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="order"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Ordem</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Digite a ordem de exibição"
-                      {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                      min={0}
                     />
                   </FormControl>
                   <FormMessage />
