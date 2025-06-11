@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  mutateCreateIngredient,
+  mutateUpdateIngredient,
+} from "@/actions/ingredients.actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,33 +21,25 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useBusiness } from "@/providers/business-provider";
+import {
+  CreateIngredient,
+  CreateIngredientSchema,
+  DetailedIngredient,
+  UpdateIngredient,
+} from "@/types/ingredients.types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
-
-interface Ingredient {
-  id: string;
-  name: string;
-  description: string;
-  photo?: string;
-}
 
 interface IngredientEditorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  editingIngredient: Ingredient | null;
+  editingIngredient: DetailedIngredient | null;
   onSuccess?: () => void;
 }
-
-const ingredientSchema = z.object({
-  name: z.string().min(1, "Nome é obrigatório"),
-  description: z.string().min(1, "Descrição é obrigatória"),
-});
-
-type IngredientFormValues = z.infer<typeof ingredientSchema>;
 
 export function IngredientEditor({
   open,
@@ -52,9 +48,10 @@ export function IngredientEditor({
   onSuccess,
 }: IngredientEditorProps) {
   const queryClient = useQueryClient();
+  const { currentBusiness } = useBusiness();
 
-  const form = useForm<IngredientFormValues>({
-    resolver: zodResolver(ingredientSchema),
+  const form = useForm<CreateIngredient>({
+    resolver: zodResolver(CreateIngredientSchema),
     defaultValues: {
       name: "",
       description: "",
@@ -62,37 +59,24 @@ export function IngredientEditor({
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: IngredientFormValues & { id?: string }) => {
-      const method = data.id ? "PUT" : "POST";
-      const url = data.id ? `/api/ingredients/${data.id}` : "/api/ingredients";
-
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.text();
-        let errorMessage;
-        try {
-          const errorJson = JSON.parse(errorData);
-          errorMessage = errorJson.message || "Erro ao salvar ingrediente";
-        } catch {
-          errorMessage = "Erro ao salvar ingrediente";
-        }
-        throw new Error(errorMessage);
-      }
-
-      const responseData = await response.text();
-      try {
-        return JSON.parse(responseData);
-      } catch {
-        throw new Error("Resposta inválida do servidor");
+    mutationFn: async (data: CreateIngredient | UpdateIngredient) => {
+      if (editingIngredient?.id) {
+        await mutateUpdateIngredient({
+          businessId: Number(currentBusiness?.id),
+          ingredientId: editingIngredient.id,
+          updateIngredient: data,
+        });
+      } else {
+        await mutateCreateIngredient({
+          businessId: Number(currentBusiness?.id),
+          createIngredient: data as CreateIngredient,
+        });
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ingredients"] });
+      queryClient.invalidateQueries({
+        queryKey: [`${currentBusiness?.id}-ingredients`],
+      });
       toast.success(
         editingIngredient
           ? "Ingrediente atualizado com sucesso!"
@@ -107,14 +91,12 @@ export function IngredientEditor({
     },
   });
 
-  const onSubmit = (data: IngredientFormValues) => {
+  const onSubmit = (data: CreateIngredient) => {
     mutation.mutate({
       ...data,
-      id: editingIngredient?.id,
     });
   };
 
-  // Reset form when dialog opens/closes or editing ingredient changes
   useEffect(() => {
     if (open && editingIngredient) {
       form.reset({
@@ -153,10 +135,7 @@ export function IngredientEditor({
                 <FormItem>
                   <FormLabel>Nome</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Digite o nome do ingrediente"
-                      {...field}
-                    />
+                    <Input placeholder="Nome do ingrediente" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -170,7 +149,7 @@ export function IngredientEditor({
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Digite a descrição do ingrediente"
+                      placeholder="Descrição do ingrediente"
                       {...field}
                     />
                   </FormControl>

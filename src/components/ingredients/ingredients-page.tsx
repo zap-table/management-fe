@@ -1,49 +1,40 @@
 "use client";
 
+import {
+  mutateDeleteIngredient,
+  queryAllIngredientsOfBusiness,
+} from "@/actions/ingredients.actions";
 import DashboardSection from "@/components/layout/dashboard-section";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { Heading } from "@/components/ui/heading";
+import { useBusiness } from "@/providers/business-provider";
+import { DetailedIngredient } from "@/types/ingredients.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { IngredientEditor } from "./ingredients-editor";
 
-interface Ingredient {
-  id: string;
-  name: string;
-  description: string;
-  photo?: string;
-}
-
 export default function Ingredients() {
   const [open, setOpen] = useState(false);
-  const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(
-    null
-  );
+  const [editingIngredient, setEditingIngredient] =
+    useState<DetailedIngredient | null>(null);
   const queryClient = useQueryClient();
+  const { currentBusiness } = useBusiness();
 
   const { data: ingredients = [], isLoading } = useQuery({
-    queryKey: ["ingredients"],
-    queryFn: async () => {
-      const response = await fetch("/api/ingredients");
-      if (!response.ok) throw new Error("Failed to fetch ingredients");
-      return response.json();
-    },
+    queryKey: [`${currentBusiness?.id}-ingredients`],
+    queryFn: async () =>
+      await queryAllIngredientsOfBusiness(Number(currentBusiness?.id)),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const response = await fetch(`/api/ingredients/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) throw new Error("Failed to delete ingredient");
-      return response.json();
-    },
+    mutationFn: mutateDeleteIngredient,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ingredients"] });
+      queryClient.invalidateQueries({
+        queryKey: [`${currentBusiness?.id}-ingredients`],
+      });
       toast.success("Ingrediente excluído com sucesso!");
     },
     onError: (error: Error) => {
@@ -52,12 +43,12 @@ export default function Ingredients() {
     },
   });
 
-  const handleEdit = (ingredient: Ingredient) => {
+  const handleEdit = (ingredient: DetailedIngredient) => {
     setEditingIngredient(ingredient);
     setOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     if (!confirm("Tem certeza que deseja excluir este ingrediente?")) return;
     deleteMutation.mutate(id);
   };
@@ -82,7 +73,7 @@ export default function Ingredients() {
     },
     {
       id: "actions",
-      cell: ({ row }: { row: { original: Ingredient } }) => {
+      cell: ({ row }: { row: { original: DetailedIngredient } }) => {
         const ingredient = row.original;
 
         return (
