@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchAllMenus, mutateDeleteMenu } from "@/actions/menus-actions";
+import { fetchAllMenus, mutateDeleteMenu } from "@/actions/menus.actions";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { Heading } from "@/components/ui/heading";

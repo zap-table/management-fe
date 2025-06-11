@@ -3,7 +3,7 @@
 import {
   mutateCreateRestaurantMenu,
   mutateUpdateRestaurantMenu,
-} from "@/actions/menus-actions";
+} from "@/actions/menus.actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
