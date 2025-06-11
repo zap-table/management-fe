@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  mutateCreateCategory,
+  mutateUpdateCategory,
+} from "@/actions/categories.actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,84 +21,63 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useBusiness } from "@/providers/business-provider";
+import {
+  CreateCategory,
+  CreateCategorySchema,
+  DetailedCategory,
+  UpdateCategory,
+} from "@/types/categories.types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
 
-interface Category {
-  id: string;
-  name: string;
-  description: string;
-  order: number;
-}
-
-interface CategoryDialogProps {
+interface CategoryEditorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  editingCategory: Category | null;
+  editingCategory: DetailedCategory | null;
   onSuccess?: () => void;
 }
 
-const categorySchema = z.object({
-  name: z.string().min(1, "Nome é obrigatório"),
-  description: z.string().min(1, "Descrição é obrigatória"),
-  order: z.number().min(0, "Ordem deve ser maior ou igual a 0"),
-});
-
-type CategoryFormValues = z.infer<typeof categorySchema>;
-
-export function CategoryDialog({
+export function CategoryEditor({
   open,
   onOpenChange,
   editingCategory,
   onSuccess,
-}: CategoryDialogProps) {
+}: CategoryEditorProps) {
   const queryClient = useQueryClient();
+  const { currentBusiness } = useBusiness();
 
-  const form = useForm<CategoryFormValues>({
-    resolver: zodResolver(categorySchema),
+  const form = useForm<CreateCategory>({
+    resolver: zodResolver(CreateCategorySchema),
     defaultValues: {
       name: "",
       description: "",
-      order: 0,
+      color: "",
     },
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: CategoryFormValues & { id?: string }) => {
-      const method = data.id ? "PUT" : "POST";
-      const url = data.id ? `/api/categories/${data.id}` : "/api/categories";
-
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.text();
-        let errorMessage;
-        try {
-          const errorJson = JSON.parse(errorData);
-          errorMessage = errorJson.message || "Erro ao salvar categoria";
-        } catch {
-          errorMessage = "Erro ao salvar categoria";
-        }
-        throw new Error(errorMessage);
-      }
-
-      const responseData = await response.text();
-      try {
-        return JSON.parse(responseData);
-      } catch {
-        throw new Error("Resposta inválida do servidor");
+    mutationFn: async (data: CreateCategory | UpdateCategory) => {
+      if (editingCategory?.id) {
+        await mutateUpdateCategory({
+          businessId: Number(currentBusiness?.id),
+          categoryId: editingCategory.id,
+          updateCategory: data,
+        });
+      } else {
+        await mutateCreateCategory({
+          businessId: Number(currentBusiness?.id),
+          createCategory: data as CreateCategory,
+        });
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      queryClient.invalidateQueries({
+        queryKey: [`${currentBusiness?.id}-categories`],
+      });
       toast.success(
         editingCategory
           ? "Categoria atualizada com sucesso!"
@@ -109,10 +92,9 @@ export function CategoryDialog({
     },
   });
 
-  const onSubmit = (data: CategoryFormValues) => {
+  const onSubmit = (data: CreateCategory) => {
     mutation.mutate({
       ...data,
-      id: editingCategory?.id,
     });
   };
 
@@ -121,13 +103,13 @@ export function CategoryDialog({
       form.reset({
         name: editingCategory.name,
         description: editingCategory.description,
-        order: editingCategory.order,
+        color: editingCategory.color,
       });
     } else if (open) {
       form.reset({
         name: "",
         description: "",
-        order: 0,
+        color: "",
       });
     }
   }, [open, editingCategory, form]);
@@ -181,25 +163,25 @@ export function CategoryDialog({
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
-              name="order"
+              name="color"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Ordem</FormLabel>
+                  <FormLabel>Cor</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
-                      placeholder="Digite a ordem de exibição"
+                      type="color"
+                      placeholder="Cor da categoria"
                       {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                      min={0}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <div className="flex justify-end gap-4 pt-4">
               <Button
                 type="button"

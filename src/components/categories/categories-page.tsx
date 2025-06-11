@@ -1,47 +1,42 @@
 "use client";
 
+import {
+  mutateDeleteCategory,
+  queryAllCategoryOfBusiness,
+} from "@/actions/categories.actions";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { Heading } from "@/components/ui/heading";
+import { useBusiness } from "@/providers/business-provider";
+import { DetailedCategory } from "@/types/categories.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash } from "lucide-react";
-import { useState } from "react";
+import { CSSProperties, useState } from "react";
 import { toast } from "sonner";
 import DashboardSection from "../layout/dashboard-section";
-import { CategoryDialog } from "./categories-dialog";
-
-interface Category {
-  id: string;
-  name: string;
-  description: string;
-  order: number;
-}
+import { Badge } from "../ui/badge";
+import { CategoryEditor } from "./categories-editor";
 
 export default function CategoriesPage() {
   const [open, setOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editingCategory, setEditingCategory] =
+    useState<DetailedCategory | null>(null);
   const queryClient = useQueryClient();
 
+  const { currentBusiness } = useBusiness();
+
   const { data: categories = [], isLoading } = useQuery({
-    queryKey: ["categories"],
-    queryFn: async () => {
-      const response = await fetch("/api/categories");
-      if (!response.ok) throw new Error("Failed to fetch categories");
-      return response.json();
-    },
+    queryKey: [`${currentBusiness?.id}-categories`],
+    queryFn: async () =>
+      await queryAllCategoryOfBusiness(Number(currentBusiness?.id)),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const response = await fetch(`/api/categories/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) throw new Error("Failed to delete category");
-      return response.json();
-    },
+    mutationFn: async (id: number) => await mutateDeleteCategory(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      queryClient.invalidateQueries({
+        queryKey: [`${currentBusiness?.id}-categories`],
+      });
       toast.success("Categoria excluída com sucesso!");
     },
     onError: (error: Error) => {
@@ -50,12 +45,12 @@ export default function CategoriesPage() {
     },
   });
 
-  const handleEdit = (category: Category) => {
+  const handleEdit = (category: DetailedCategory) => {
     setEditingCategory(category);
     setOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     if (!confirm("Tem certeza que deseja excluir esta categoria?")) return;
     deleteMutation.mutate(id);
   };
@@ -71,20 +66,24 @@ export default function CategoriesPage() {
 
   const columns = [
     {
-      accessorKey: "name",
+      id: "name",
       header: "Nome",
+      cell: ({ row }: { row: { original: DetailedCategory } }) => {
+        const style: CSSProperties = {
+          ...(row.original?.color && { backgroundColor: row.original.color }),
+        };
+
+        return <Badge style={style}>{row.original.name}</Badge>;
+      },
     },
     {
       accessorKey: "description",
       header: "Descrição",
     },
     {
-      accessorKey: "order",
-      header: "Ordem",
-    },
-    {
       id: "actions",
-      cell: ({ row }: { row: { original: Category } }) => {
+      header: "Ações",
+      cell: ({ row }: { row: { original: DetailedCategory } }) => {
         const category = row.original;
 
         return (
@@ -132,7 +131,7 @@ export default function CategoriesPage() {
         searchPlaceholder="Pesquise pelo nome"
       />
 
-      <CategoryDialog
+      <CategoryEditor
         open={open}
         onOpenChange={setOpen}
         editingCategory={editingCategory}
