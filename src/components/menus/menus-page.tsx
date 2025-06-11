@@ -10,6 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import DashboardSection from "../layout/dashboard-section";
 import { MenusEditor } from "./menus-editor";
 
 export default function MenusPage() {
@@ -95,7 +96,7 @@ export default function MenusPage() {
   }
 
   return (
-    <section className="w-full p-4">
+    <DashboardSection>
       <div className="flex items-center justify-between mb-8">
         <Heading
           title="Menus"
@@ -115,6 +116,6 @@ export default function MenusPage() {
         editingMenu={editingMenu}
         onSuccess={handleEditorSuccess}
       />
-    </section>
+    </DashboardSection>
   );
 }

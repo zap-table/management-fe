@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/providers/auth-provider";
 import { useBusiness } from "@/providers/business-provider";
+import { usePathname } from "next/navigation";
 import { BusinessRestaurantSelector } from "../business/business-restaurant-selector";
 import {
   DropdownMenu,
@@ -96,6 +97,7 @@ const menuItems = [
 export function AppSidebar() {
   const { user, logout } = useAuth();
   const { currentRestaurant } = useBusiness();
+  const pathname = usePathname();
 
   if (!user) {
     return null;
@@ -103,6 +105,13 @@ export function AppSidebar() {
 
   const showOwnerItems = user.role === "owner";
   const hasRestaurantSelected = !!currentRestaurant;
+
+  const isActive = (url: string) => {
+    if (url === "/") {
+      return pathname === "/";
+    }
+    return pathname.startsWith(url);
+  };
 
   return (
     <Sidebar>
@@ -127,6 +136,7 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       asChild
                       disabled={!hasRestaurantSelected}
+                      isActive={isActive(item.url)}
                     >
                       <Link href={item.url}>
                         <item.icon />
@@ -146,7 +156,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <Link href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>

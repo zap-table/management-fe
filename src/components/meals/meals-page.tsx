@@ -1,52 +1,36 @@
 "use client";
 
+import { mutateDeleteMeal, queryAllMeals } from "@/actions/meals.actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { Heading } from "@/components/ui/heading";
-import { Category, Ingredient, Product } from "@/types";
+import { useBusiness } from "@/providers/business-provider";
+import { Meal } from "@/types/meals.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { MealsEditor } from "./meals-editor";
 
-interface MealWithRelations extends Product {
-  categories: Category[];
-  ingredients: Ingredient[];
-}
-
 export default function MealsPage() {
   const [open, setOpen] = useState(false);
-  const [editingMeal, setEditingMeal] = useState<MealWithRelations | null>(
-    null
-  );
+  const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
   const queryClient = useQueryClient();
 
-  // Fetch Meals with Categories
-  const { data: Meals = [], isLoading: isLoadingMeals } = useQuery<
-    MealWithRelations[]
-  >({
-    queryKey: ["Meals"],
-    queryFn: async () => {
-      // TODO fetch to BE
-      const response = await fetch("/api/products");
-      if (!response.ok) throw new Error("Failed to fetch Meals");
-      return response.json();
-    },
+  const { currentBusiness } = useBusiness();
+
+  const { data: meals = [], isLoading: isLoadingMeals } = useQuery<Meal[]>({
+    queryKey: [`${currentBusiness?.id}-meals`],
+    queryFn: queryAllMeals,
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await fetch(`/api/products/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) throw new Error("Failed to delete Meal");
-      return response.json();
-    },
+    mutationFn: mutateDeleteMeal,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["Meals"] });
+      queryClient.invalidateQueries({
+        queryKey: [`${currentBusiness?.id}-meals`],
+      });
       toast.success("Produto excluído com sucesso!");
     },
     onError: (error: Error) => {
@@ -55,8 +39,8 @@ export default function MealsPage() {
     },
   });
 
-  const handleEdit = (Meal: MealWithRelations) => {
-    setEditingMeal(Meal);
+  const handleEdit = (meal: Meal) => {
+    setEditingMeal(meal);
     setOpen(true);
   };
 
@@ -86,31 +70,35 @@ export default function MealsPage() {
     {
       accessorKey: "default_price",
       header: "Preço",
-      cell: ({ row }: { row: { original: MealWithRelations } }) => {
+      cell: ({ row }: { row: { original: Meal } }) => {
         return new Intl.NumberFormat("pt-PT", {
           style: "currency",
           currency: "EUR",
-        }).format(row.original.default_price);
+        }).format(Number(row.original.defaultPrice));
       },
     },
     {
       accessorKey: "categories",
       header: "Categorias",
-      cell: ({ row }: { row: { original: MealWithRelations } }) => {
+      // TODO implement categories here
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      cell: ({ row }: { row: { original: Meal } }) => {
         return (
           <div className="flex flex-wrap gap-1">
-            {row.original.categories.map((category) => (
+            {/*row.original.categories.map((category) => (
               <Badge key={category.id} variant="secondary">
                 {category.name}
               </Badge>
-            ))}
+            ))*/}
+
+            <Badge variant="secondary">TODO</Badge>
           </div>
         );
       },
     },
     {
       id: "actions",
-      cell: ({ row }: { row: { original: MealWithRelations } }) => {
+      cell: ({ row }: { row: { original: Meal } }) => {
         const Meal = row.original;
 
         return (
@@ -149,16 +137,21 @@ export default function MealsPage() {
         />
         <Button onClick={handleAddNew}>
           <Plus className="mr-2 h-4 w-4" />
-          Criar
+          Criar refeição
         </Button>
       </div>
 
-      <DataTable columns={columns} data={Meals} searchKey="name" />
+      <DataTable
+        columns={columns}
+        data={meals}
+        searchKey="name"
+        searchPlaceholder="Pesquise pelo nome"
+      />
 
       <MealsEditor
         open={open}
         onOpenChange={setOpen}
-        editingProduct={editingMeal}
+        editingMeal={editingMeal}
         onSuccess={handleEditorSuccess}
       />
     </div>

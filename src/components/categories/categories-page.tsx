@@ -125,7 +125,12 @@ export default function CategoriesPage() {
         </Button>
       </div>
 
-      <DataTable columns={columns} data={categories} searchKey="name" />
+      <DataTable
+        columns={columns}
+        data={categories}
+        searchKey="name"
+        searchPlaceholder="Pesquise pelo nome"
+      />
 
       <CategoryDialog
         open={open}

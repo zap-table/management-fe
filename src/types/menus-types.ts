@@ -40,6 +40,7 @@ export {
   MenuItemSchema,
   UpdateRestaurantMenuSchema,
 };
+
 export type {
   BaseRestaurantMenu,
   CreateRestaurantMenu,
