@@ -96,6 +96,7 @@ const menuItems = [
 
 export function AppSidebar() {
   const { user, logout } = useAuth();
+  console.log(user);
   const { currentRestaurant } = useBusiness();
   const pathname = usePathname();
 

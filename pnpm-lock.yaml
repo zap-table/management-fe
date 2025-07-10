@@ -45,8 +45,11 @@ dependencies:
     specifier: ^1.2.7
     version: 1.2.7(@types/react-dom@19.1.6)(@types/react@19.1.6)(react-dom@19.1.0)(react@19.1.0)
   '@tanstack/react-query':
-    specifier: ^5.74.3
+    specifier: ^5.80.6
     version: 5.80.6(react@19.1.0)
+  '@tanstack/react-query-devtools':
+    specifier: ^5.81.2
+    version: 5.81.2(@tanstack/react-query@5.80.6)(react@19.1.0)
   '@tanstack/react-table':
     specifier: ^8.21.3
     version: 8.21.3(react-dom@19.1.0)(react@19.1.0)
@@ -71,6 +74,9 @@ dependencies:
   jspdf:
     specifier: ^3.0.0
     version: 3.0.1
+  jwt-decode:
+    specifier: ^4.0.0
+    version: 4.0.0
   lucide-react:
     specifier: ^0.479.0
     version: 0.479.0(react@19.1.0)
@@ -1625,6 +1631,21 @@ packages:
 
   /@tanstack/query-core@5.80.6:
     resolution: {integrity: sha512-nl7YxT/TAU+VTf+e2zTkObGTyY8YZBMnbgeA1ee66lIVqzKlYursAII6z5t0e6rXgwUMJSV4dshBTNacNpZHbQ==}
+    dev: false
+
+  /@tanstack/query-devtools@5.81.2:
+    resolution: {integrity: sha512-jCeJcDCwKfoyyBXjXe9+Lo8aTkavygHHsUHAlxQKKaDeyT0qyQNLKl7+UyqYH2dDF6UN/14873IPBHchcsU+Zg==}
+    dev: false
+
+  /@tanstack/react-query-devtools@5.81.2(@tanstack/react-query@5.80.6)(react@19.1.0):
+    resolution: {integrity: sha512-TX0OQ4cbgX6z2uN8c9x0QUNbyePGyUGdcgrGnV6TYEJc7KPT8PqeASuzoA5NGw1CiMGvyFAkIGA2KipvhM9d1g==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.81.2
+      react: ^18 || ^19
+    dependencies:
+      '@tanstack/query-devtools': 5.81.2
+      '@tanstack/react-query': 5.80.6(react@19.1.0)
+      react: 19.1.0
     dev: false
 
   /@tanstack/react-query@5.80.6(react@19.1.0):
@@ -3613,6 +3634,11 @@ packages:
       object.assign: 4.1.7
       object.values: 1.2.1
     dev: true
+
+  /jwt-decode@4.0.0:
+    resolution: {integrity: sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==}
+    engines: {node: '>=18'}
+    dev: false
 
   /keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}

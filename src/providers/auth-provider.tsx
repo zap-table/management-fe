@@ -1,88 +1,98 @@
 "use client";
 
+import { queryGetUserInfo } from "@/actions/auth.actions";
+import { apiClient } from "@/lib/api-client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import type React from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext } from "react";
 
 interface User {
   id: string;
   name: string;
   email: string;
-  role: "owner" | "staff";
-  businessId?: string;
-  restaurantId?: string;
+  roles: string[];
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
   isLoading: boolean;
+  isAuthenticated: boolean;
+  hasRole: (role: string | string[]) => boolean;
+  login: (credentials: { email: string; password: string }) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined
+);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const router = useRouter();
 
-  useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setIsLoading(false);
-  }, []);
+  // Fetch user info from /auth/me (cookie is sent automatically)
+  const { data: user, isLoading } = useQuery<User | null>({
+    queryKey: ["me"],
+    queryFn: async () => {
+      try {
+        return await queryGetUserInfo();
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (error) {
+        // TODO need to fix this, I should
+        return null;
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: false,
+  });
 
-  const login = async (email: string, password: string) => {
-    // Simulate API call
-    setIsLoading(true);
+  const loginMutation = useMutation({
+    mutationFn: async (credentials: { email: string; password: string }) => {
+      await apiClient.login(credentials);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+      router.push("/");
+    },
+  });
 
-    // Mock users for demo
-    const mockUsers: User[] = [
-      {
-        id: "1",
-        name: "John Owner",
-        email: "owner@example.com",
-        role: "owner",
-      },
-      {
-        id: "2",
-        name: "Jane Staff",
-        email: "staff@example.com",
-        role: "staff",
-        businessId: "1",
-        restaurantId: "1",
-      },
-    ];
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await apiClient.logout();
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+      router.push("/sign-in");
+    },
+  });
 
-    const foundUser = mockUsers.find((u) => u.email === email);
-    if (foundUser && password === "password") {
-      setUser(foundUser);
-      localStorage.setItem("user", JSON.stringify(foundUser));
-    } else {
-      throw new Error("Invalid credentials");
-    }
-    setIsLoading(false);
+  const hasRole = (requiredRoles: string | string[]): boolean => {
+    if (!user?.roles) return false;
+    const roles = Array.isArray(requiredRoles)
+      ? requiredRoles
+      : [requiredRoles];
+    return roles.some((role) => user.roles.includes(role));
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
-    localStorage.removeItem("currentBusiness");
-    localStorage.removeItem("currentRestaurant");
+  const contextValue: AuthContextType = {
+    user: user || null,
+    isLoading,
+    isAuthenticated: !!user,
+    hasRole,
+    login: async (credentials) => loginMutation.mutateAsync(credentials),
+    logout: async () => logoutMutation.mutateAsync(),
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 }
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 }

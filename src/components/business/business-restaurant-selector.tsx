@@ -14,18 +14,27 @@ import { useBusiness } from "@/providers/business-provider";
 import { Building2, ChevronDown, Store } from "lucide-react";
 
 export function BusinessRestaurantSelector() {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
+
   const {
     businesses,
+    isLoadingBusinesses,
+    getRestaurantsForBusiness,
     currentBusiness,
     currentRestaurant,
     setCurrentBusiness,
     setCurrentRestaurant,
-    getRestaurantsForBusiness,
   } = useBusiness();
 
-  if (!user || user.role === "staff") {
-    // Staff members see their assigned restaurant only
+  if (isLoadingBusinesses) {
+    return <>Loading</>;
+  }
+
+  if (!businesses) {
+    return <>No business, please create one</>;
+  }
+
+  if (!user || hasRole("staff")) {
     return (
       <div className="p-2">
         <div className="flex items-center gap-2 text-sm">
@@ -50,7 +59,7 @@ export function BusinessRestaurantSelector() {
               <Building2 className="h-4 w-4 text-muted-foreground" />
               <div>
                 <div className="font-medium text-sm">
-                  {currentBusiness?.name || "Select Business"}
+                  {currentBusiness?.name || "Selecione o seu Négocio"}
                 </div>
                 {currentBusiness && (
                   <div className="text-xs text-muted-foreground">
@@ -63,7 +72,7 @@ export function BusinessRestaurantSelector() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-64">
-          <DropdownMenuLabel>Select Business</DropdownMenuLabel>
+          <DropdownMenuLabel>Selecione o sue Négocio</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {businesses.map((business) => (
             <DropdownMenuItem
@@ -105,7 +114,7 @@ export function BusinessRestaurantSelector() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-64">
-            <DropdownMenuLabel>Select Restaurant</DropdownMenuLabel>
+            <DropdownMenuLabel>Selecione o restaurante</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {getRestaurantsForBusiness(currentBusiness.id).map((restaurant) => (
               <DropdownMenuItem

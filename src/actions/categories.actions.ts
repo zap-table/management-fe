@@ -1,33 +1,33 @@
-import { DEFAULT_HEADERS, managementBackendUrl } from "@/configs";
+import { apiClient } from "@/lib/api-client";
 import {
-  CreateCategory,
-  DetailedCategory,
-  DetailedCategoryListSchema,
-  UpdateCategory,
+    CreateCategory,
+    DetailedCategory,
+    DetailedCategoryListSchema,
+    UpdateCategory,
 } from "@/types/categories.types";
-import z from "zod";
+import { z } from "zod";
 
-const MANAGEMENT_BE_URL = managementBackendUrl();
+const CategoryResponseSchema = z.object({
+  message: z.string(),
+});
 
 export async function queryAllCategoryOfBusiness(
   businessId: number
 ): Promise<DetailedCategory[]> {
   try {
-    const response = await fetch(
-      `${MANAGEMENT_BE_URL}/category/business/${businessId}`,
+    const response = await apiClient.request(
+      `/category/business/${businessId}`,
       {
         method: "GET",
-        headers: DEFAULT_HEADERS,
-      }
+      },
+      DetailedCategoryListSchema
     );
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+    if (response.error || !response.data) {
+      throw new Error(response.error || "Failed to fetch categories");
     }
 
-    const responseBody = await response.json();
-
-    return DetailedCategoryListSchema.parse(responseBody);
+    return response.data;
   } catch (error: unknown) {
     checkError(error);
     throw error;
@@ -47,14 +47,17 @@ export async function mutateCreateCategory({
       businessId,
     };
 
-    const response = await fetch(`${MANAGEMENT_BE_URL}/category`, {
-      method: "POST",
-      headers: DEFAULT_HEADERS,
-      body: JSON.stringify(requestBody),
-    });
+    const response = await apiClient.request(
+      "/category",
+      {
+        method: "POST",
+        body: JSON.stringify(requestBody),
+      },
+      CategoryResponseSchema
+    );
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+    if (response.error || !response.data) {
+      throw new Error(response.error || "Failed to create category");
     }
   } catch (error: unknown) {
     checkError(error);
@@ -77,17 +80,17 @@ export async function mutateUpdateCategory({
       businessId,
     };
 
-    const response = await fetch(
-      `${MANAGEMENT_BE_URL}/category/${categoryId}`,
+    const response = await apiClient.request(
+      `/category/${categoryId}`,
       {
         method: "PATCH",
-        headers: DEFAULT_HEADERS,
         body: JSON.stringify(requestBody),
-      }
+      },
+      CategoryResponseSchema
     );
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+    if (response.error || !response.data) {
+      throw new Error(response.error || "Failed to update category");
     }
   } catch (error: unknown) {
     checkError(error);
@@ -97,18 +100,19 @@ export async function mutateUpdateCategory({
 
 export async function mutateDeleteCategory(categoryId: number): Promise<void> {
   try {
-    const response = await fetch(
-      `${MANAGEMENT_BE_URL}/category/${categoryId}`,
+    const response = await apiClient.request(
+      `/category/${categoryId}`,
       {
         method: "DELETE",
-        headers: DEFAULT_HEADERS,
-      }
+      },
+      CategoryResponseSchema
     );
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+    if (response.error || !response.data) {
+      throw new Error(response.error || "Failed to delete category");
     }
   } catch (error: unknown) {
+    checkError(error);
     throw error;
   }
 }
@@ -117,7 +121,7 @@ function checkError(error: unknown) {
   if (error instanceof z.ZodError) {
     console.error("Validation error:", error.errors);
   } else if (error instanceof Error) {
-    console.error("Fetch error:", error.message);
+    console.error("API error:", error.message);
   } else {
     console.error("Unknown error:", error);
   }
