@@ -1,33 +1,18 @@
-import { apiClient } from "@/lib/api-client";
+import { kyClient } from "@/lib/api-client";
 import {
-    CreateCategory,
-    DetailedCategory,
-    DetailedCategoryListSchema,
-    UpdateCategory,
+  CreateCategory,
+  DetailedCategory,
+  UpdateCategory,
 } from "@/types/categories.types";
 import { z } from "zod";
-
-const CategoryResponseSchema = z.object({
-  message: z.string(),
-});
 
 export async function queryAllCategoryOfBusiness(
   businessId: number
 ): Promise<DetailedCategory[]> {
   try {
-    const response = await apiClient.request(
-      `/category/business/${businessId}`,
-      {
-        method: "GET",
-      },
-      DetailedCategoryListSchema
-    );
-
-    if (response.error || !response.data) {
-      throw new Error(response.error || "Failed to fetch categories");
-    }
-
-    return response.data;
+    return await kyClient
+      .get<DetailedCategory[]>(`category/business/${businessId}`)
+      .json();
   } catch (error: unknown) {
     checkError(error);
     throw error;
@@ -47,18 +32,9 @@ export async function mutateCreateCategory({
       businessId,
     };
 
-    const response = await apiClient.request(
-      "/category",
-      {
-        method: "POST",
-        body: JSON.stringify(requestBody),
-      },
-      CategoryResponseSchema
-    );
-
-    if (response.error || !response.data) {
-      throw new Error(response.error || "Failed to create category");
-    }
+    await kyClient.post("category", {
+      body: JSON.stringify(requestBody),
+    });
   } catch (error: unknown) {
     checkError(error);
     throw error;
@@ -80,18 +56,9 @@ export async function mutateUpdateCategory({
       businessId,
     };
 
-    const response = await apiClient.request(
-      `/category/${categoryId}`,
-      {
-        method: "PATCH",
-        body: JSON.stringify(requestBody),
-      },
-      CategoryResponseSchema
-    );
-
-    if (response.error || !response.data) {
-      throw new Error(response.error || "Failed to update category");
-    }
+    await kyClient.patch(`category/${categoryId}`, {
+      body: JSON.stringify(requestBody),
+    });
   } catch (error: unknown) {
     checkError(error);
     throw error;
@@ -100,17 +67,7 @@ export async function mutateUpdateCategory({
 
 export async function mutateDeleteCategory(categoryId: number): Promise<void> {
   try {
-    const response = await apiClient.request(
-      `/category/${categoryId}`,
-      {
-        method: "DELETE",
-      },
-      CategoryResponseSchema
-    );
-
-    if (response.error || !response.data) {
-      throw new Error(response.error || "Failed to delete category");
-    }
+    await kyClient.delete(`category/${categoryId}`);
   } catch (error: unknown) {
     checkError(error);
     throw error;

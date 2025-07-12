@@ -42,6 +42,11 @@ const UserSchema = z.object({
   roles: z.array(RoleSchema),
 });
 
+export const AuthStatusSchema = z.object({
+  isAuthenticated: z.boolean(),
+  hasRefreshToken: z.boolean(),
+});
+
 export const AuthTokensSchema = z.object({
   access_token: z.string(),
   refresh_token: z.string(),
@@ -66,11 +71,11 @@ type User = z.infer<typeof UserSchema>;
 type SignUpOwnerUser = z.infer<typeof SignUpOwnerUserSchema>;
 type SignInUser = z.infer<typeof SignInUserSchema>;
 type Role = z.infer<typeof RoleSchema>;
+export type AuthStatus = z.infer<typeof AuthStatusSchema>;
 export type AuthTokens = z.infer<typeof AuthTokensSchema>;
 export type LoginResponse = z.infer<typeof LoginResponseSchema>;
 export type JwtPayload = z.infer<typeof JwtPayloadSchema>;
 
 export { RoleSchema, SignInUserSchema, SignUpOwnerUserSchema, UserSchema };
 
-  export type { Role, SignInUser, SignUpOwnerUser, User };
-
+export type { Role, SignInUser, SignUpOwnerUser, User };

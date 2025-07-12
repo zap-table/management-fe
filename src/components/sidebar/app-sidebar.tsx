@@ -95,16 +95,20 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
-  const { user, logout } = useAuth();
-  console.log(user);
+  const { user, logout, hasRole, isLoading } = useAuth();
   const { currentRestaurant } = useBusiness();
   const pathname = usePathname();
+
+  if (isLoading) {
+    // TODO should create skeleton for loading of side bar
+    return null;
+  }
 
   if (!user) {
     return null;
   }
 
-  const showOwnerItems = user.role === "owner";
+  const showOwnerItems = hasRole("owner");
   const hasRestaurantSelected = !!currentRestaurant;
 
   const isActive = (url: string) => {
@@ -187,9 +191,6 @@ export function AppSidebar() {
                     <p className="font-medium">{user.name}</p>
                     <p className="text-xs text-muted-foreground">
                       {user.email}
-                    </p>
-                    <p className="text-xs text-muted-foreground capitalize">
-                      {user.role}
                     </p>
                   </div>
                 </DropdownMenuLabel>

@@ -1,33 +1,18 @@
-import { DEFAULT_HEADERS, managementBackendUrl } from "@/configs";
+import { kyClient } from "@/lib/api-client";
 import {
   CreateIngredient,
   DetailedIngredient,
-  DetailedIngredientListSchema,
   UpdateIngredient,
 } from "@/types/ingredients.types";
 import z from "zod";
-
-const MANAGEMENT_BE_URL = managementBackendUrl();
 
 export async function queryAllIngredientsOfBusiness(
   businessId: number
 ): Promise<DetailedIngredient[]> {
   try {
-    const response = await fetch(
-      `${MANAGEMENT_BE_URL}/ingredient/business/${businessId}`,
-      {
-        method: "GET",
-        headers: DEFAULT_HEADERS,
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const responseBody = await response.json();
-
-    return DetailedIngredientListSchema.parse(responseBody);
+    return await kyClient
+      .get<DetailedIngredient[]>(`ingredient/business/${businessId}`)
+      .json();
   } catch (error: unknown) {
     checkError(error);
     throw error;
@@ -47,15 +32,9 @@ export async function mutateCreateIngredient({
       businessId,
     };
 
-    const response = await fetch(`${MANAGEMENT_BE_URL}/ingredient`, {
-      method: "POST",
-      headers: DEFAULT_HEADERS,
+    await kyClient.post(`ingredient`, {
       body: JSON.stringify(requestBody),
     });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
   } catch (error: unknown) {
     checkError(error);
     throw error;
@@ -77,14 +56,9 @@ export async function mutateUpdateIngredient({
       businessId,
     };
 
-    const response = await fetch(
-      `${MANAGEMENT_BE_URL}/ingredient/${ingredientId}`,
-      {
-        method: "PATCH",
-        headers: DEFAULT_HEADERS,
-        body: JSON.stringify(requestBody),
-      }
-    );
+    const response = await kyClient.patch(`ingredient/${ingredientId}`, {
+      body: JSON.stringify(requestBody),
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
@@ -99,17 +73,7 @@ export async function mutateDeleteIngredient(
   ingredientId: number
 ): Promise<void> {
   try {
-    const response = await fetch(
-      `${MANAGEMENT_BE_URL}/ingredient/${ingredientId}`,
-      {
-        method: "DELETE",
-        headers: DEFAULT_HEADERS,
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
+    await kyClient.delete(`ingredient/${ingredientId}`);
   } catch (error: unknown) {
     throw error;
   }

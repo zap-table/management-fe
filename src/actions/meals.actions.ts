@@ -1,28 +1,10 @@
-import { DEFAULT_HEADERS, managementBackendUrl } from "@/configs";
-import {
-  CreateMeal,
-  Meal,
-  MealListSchema,
-  UpdateMeal,
-} from "@/types/meals.types";
+import { kyClient } from "@/lib/api-client";
+import { CreateMeal, Meal, UpdateMeal } from "@/types/meals.types";
 import z from "zod";
-
-const MANAGEMENT_BE_URL = managementBackendUrl();
 
 export async function queryAllMeals(): Promise<Meal[]> {
   try {
-    const response = await fetch(`${MANAGEMENT_BE_URL}/meal`, {
-      method: "GET",
-      headers: DEFAULT_HEADERS,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const responseBody = await response.json();
-
-    return MealListSchema.parse(responseBody);
+    return await kyClient.get<Meal[]>(`meal`).json();
   } catch (error: unknown) {
     checkError(error);
     throw error;
@@ -42,15 +24,9 @@ export async function mutateCreateMeal({
       businessId,
     };
 
-    const response = await fetch(`${MANAGEMENT_BE_URL}/meal`, {
-      method: "POST",
-      headers: DEFAULT_HEADERS,
+    await kyClient.post(`meal`, {
       body: JSON.stringify(requestBody),
     });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
   } catch (error: unknown) {
     checkError(error);
     throw error;
@@ -72,15 +48,9 @@ export async function mutateUpdateMeal({
       businessId,
     };
 
-    const response = await fetch(`${MANAGEMENT_BE_URL}/meal/${mealId}`, {
-      method: "PATCH",
-      headers: DEFAULT_HEADERS,
+    await kyClient.patch(`meal/${mealId}`, {
       body: JSON.stringify(requestBody),
     });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
 
     // TODO should parse response to updated model
     //const responseBody = await response.json();
@@ -93,14 +63,9 @@ export async function mutateUpdateMeal({
 
 export async function mutateDeleteMeal(mealId: number): Promise<void> {
   try {
-    const response = await fetch(`${MANAGEMENT_BE_URL}/meal/${mealId}`, {
+    await kyClient.delete(`meal/${mealId}`, {
       method: "DELETE",
-      headers: DEFAULT_HEADERS,
     });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
   } catch (error: unknown) {
     throw error;
   }

@@ -1,15 +1,11 @@
-'use client';
+"use client";
 
-import { useQuery } from '@tanstack/react-query';
-import { Restaurant } from '@/types';
-import { Heading } from '@/components/ui/heading';
-import { Separator } from '@/components/ui/separator';
-import { Card, CardContent } from '@/components/ui/card';
-import { 
-  Phone, 
-  MapPin, 
-  Users 
-} from 'lucide-react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Heading } from "@/components/ui/heading";
+import { Separator } from "@/components/ui/separator";
+import { Restaurant } from "@/types/restaurants.types";
+import { useQuery } from "@tanstack/react-query";
+import { MapPin, Phone } from "lucide-react";
 
 interface RestaurantHeaderProps {
   restaurantId: string;
@@ -17,7 +13,7 @@ interface RestaurantHeaderProps {
 
 export function RestaurantHeader({ restaurantId }: RestaurantHeaderProps) {
   const { data: restaurant, isLoading } = useQuery<Restaurant>({
-    queryKey: ['restaurant', restaurantId],
+    queryKey: ["restaurant", restaurantId],
     queryFn: async () => {
       const response = await fetch(`/api/restaurants/${restaurantId}`);
       return response.json();
@@ -32,7 +28,7 @@ export function RestaurantHeader({ restaurantId }: RestaurantHeaderProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <Heading
-          title={restaurant?.name || 'Restaurante'}
+          title={restaurant?.name || "Restaurante"}
           description="Gestão do estabelecimento"
         />
       </div>
@@ -47,16 +43,10 @@ export function RestaurantHeader({ restaurantId }: RestaurantHeaderProps) {
         <Card>
           <CardContent className="flex items-center p-4">
             <Phone className="h-5 w-5 mr-2 text-muted-foreground" />
-            <span className="text-sm">{restaurant?.phone_number}</span>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center p-4">
-            <Users className="h-5 w-5 mr-2 text-muted-foreground" />
-            <span className="text-sm">Staff: {restaurant?.staff?.length || 0}</span>
+            <span className="text-sm">{restaurant?.phoneNumber}</span>
           </CardContent>
         </Card>
       </div>
     </div>
   );
-} 
+}

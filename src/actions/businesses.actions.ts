@@ -1,22 +1,10 @@
-import { apiClient } from "@/lib/api-client";
-import { Business, BusinessArraySchema } from "@/types/businesses.types";
+import { kyClient } from "@/lib/api-client";
+import { Business } from "@/types/businesses.types";
 import z from "zod";
 
 export async function queryUserBusinesses(): Promise<Business[]> {
   try {
-    const response = await apiClient.request(
-      "/business/user",
-      {
-        method: "GET",
-      },
-      BusinessArraySchema
-    );
-
-    if (response.error || !response.data) {
-      throw new Error(response.error || "Fetching Businesses failed");
-    }
-
-    return response.data;
+    return await kyClient.get<Business[]>("business/user").json();
   } catch (error: unknown) {
     checkError(error);
     throw error;

@@ -4,51 +4,49 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/providers/auth-provider";
 import { useBusiness } from "@/providers/business-provider";
+import { Business } from "@/types/businesses.types";
+import { Restaurant } from "@/types/restaurants.types";
 import { Building2, ChevronDown, Store } from "lucide-react";
+import Link from "next/link";
 
-export function BusinessRestaurantSelector() {
-  const { user, hasRole } = useAuth();
-
-  const {
-    businesses,
-    isLoadingBusinesses,
-    getRestaurantsForBusiness,
-    currentBusiness,
-    currentRestaurant,
-    setCurrentBusiness,
-    setCurrentRestaurant,
-  } = useBusiness();
-
-  if (isLoadingBusinesses) {
-    return <>Loading</>;
-  }
-
-  if (!businesses) {
-    return <>No business, please create one</>;
-  }
-
-  if (!user || hasRole("staff")) {
-    return (
-      <div className="p-2">
-        <div className="flex items-center gap-2 text-sm">
-          <Building2 className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium">{currentBusiness?.name}</span>
-        </div>
-        <div className="flex items-center gap-2 text-sm mt-1">
-          <Store className="h-4 w-4 text-muted-foreground" />
-          <span>{currentRestaurant?.name}</span>
-        </div>
+function ReadOnlySelector({
+  currentBusiness,
+  currentRestaurant,
+}: {
+  currentBusiness: Business | null;
+  currentRestaurant: Restaurant | null;
+}) {
+  return (
+    <div className="p-2">
+      <div className="flex items-center gap-2 text-sm">
+        <Building2 className="h-4 w-4 text-muted-foreground" />
+        <span className="font-medium">{currentBusiness?.name}</span>
       </div>
-    );
-  }
+      <div className="flex items-center gap-2 text-sm mt-1">
+        <Store className="h-4 w-4 text-muted-foreground" />
+        <span>{currentRestaurant?.name}</span>
+      </div>
+    </div>
+  );
+}
 
+function InteractiveSelector({
+  businesses,
+  currentBusiness,
+  currentRestaurant,
+  getRestaurantsForBusiness,
+}: {
+  businesses: Business[];
+  currentBusiness: Business | null;
+  currentRestaurant: Restaurant | null;
+  getRestaurantsForBusiness: (id: number) => Restaurant[];
+}) {
   return (
     <div>
       {/* Business Selector */}
@@ -75,16 +73,16 @@ export function BusinessRestaurantSelector() {
           <DropdownMenuLabel>Selecione o sue Négocio</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {businesses.map((business) => (
-            <DropdownMenuItem
+            <Link
               key={business.id}
-              onClick={() => setCurrentBusiness(business)}
+              href={`/business/${business.id}`}
               className="flex flex-col items-start"
             >
               <div className="font-medium">{business.name}</div>
               <div className="text-xs text-muted-foreground">
                 {business.description}
               </div>
-            </DropdownMenuItem>
+            </Link>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
@@ -117,20 +115,65 @@ export function BusinessRestaurantSelector() {
             <DropdownMenuLabel>Selecione o restaurante</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {getRestaurantsForBusiness(currentBusiness.id).map((restaurant) => (
-              <DropdownMenuItem
+              <Link
                 key={restaurant.id}
-                onClick={() => setCurrentRestaurant(restaurant)}
+                href={`/business/${currentBusiness.id}/restaurant/${restaurant.id}`}
                 className="flex flex-col items-start"
               >
                 <div className="font-medium">{restaurant.name}</div>
                 <div className="text-xs text-muted-foreground">
                   {restaurant.address}
                 </div>
-              </DropdownMenuItem>
+              </Link>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
       )}
     </div>
   );
+}
+
+export function BusinessRestaurantSelector() {
+  const { user, hasRole } = useAuth();
+  const {
+    businesses,
+    isLoadingBusinesses,
+    getRestaurantsForBusiness,
+    currentBusiness,
+    currentRestaurant,
+  } = useBusiness();
+
+  if (isLoadingBusinesses) {
+    return <>Loading</>;
+  }
+
+  if (!businesses) {
+    return <>No business, please create one</>;
+  }
+
+  // Determine if user should see read-only or interactive selector
+  const isReadOnly = !user || hasRole("staff");
+  const canSelectBusiness = user && !hasRole("staff");
+
+  if (isReadOnly) {
+    return (
+      <ReadOnlySelector
+        currentBusiness={currentBusiness}
+        currentRestaurant={currentRestaurant}
+      />
+    );
+  }
+
+  if (canSelectBusiness) {
+    return (
+      <InteractiveSelector
+        businesses={businesses}
+        currentBusiness={currentBusiness}
+        currentRestaurant={currentRestaurant}
+        getRestaurantsForBusiness={getRestaurantsForBusiness}
+      />
+    );
+  }
+
+  return null;
 }

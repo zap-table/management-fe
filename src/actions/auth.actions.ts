@@ -1,33 +1,25 @@
-import { apiClient } from "@/lib/api-client";
+import { kyClient } from "@/lib/api-client";
 import {
+  AuthStatus,
   LoginResponse,
-  LoginResponseSchema,
   SignInUser,
   SignUpOwnerUser,
   User,
-  UserSchema,
 } from "@/types/auth.types";
 import { z } from "zod";
 
-const SignUpResponseSchema = z.object({
-  message: z.string(),
-});
-
 export async function queryGetUserInfo(): Promise<User> {
   try {
-    const response = await apiClient.request(
-      "/auth/me",
-      {
-        method: "GET",
-      },
-      UserSchema
-    );
+    return await kyClient.get<User>("auth/me").json();
+  } catch (error: unknown) {
+    checkError(error);
+    throw error;
+  }
+}
 
-    if (response.error || !response.data) {
-      throw new Error(response.error || "Signup failed");
-    }
-
-    return response.data;
+export async function queryAuthStatus(): Promise<AuthStatus> {
+  try {
+    return await kyClient.get<AuthStatus>("auth/status").json();
   } catch (error: unknown) {
     checkError(error);
     throw error;
@@ -41,19 +33,9 @@ export async function mutateSignUpOwnerUser(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordConfirmation, ...requestBody } = signUpOwnerUser;
 
-    const response = await apiClient.request(
-      "/auth/signup",
-      {
-        method: "POST",
-        body: JSON.stringify(requestBody),
-      },
-      // TODO Fix response type
-      SignUpResponseSchema
-    );
-
-    if (response.error || !response.data) {
-      throw new Error(response.error || "Signup failed");
-    }
+    await kyClient.post("/auth/sign-up", {
+      body: JSON.stringify(requestBody),
+    });
   } catch (error: unknown) {
     checkError(error);
     throw error;
@@ -64,20 +46,20 @@ export async function mutateSignInUser(
   signInUser: SignInUser
 ): Promise<LoginResponse> {
   try {
-    const response = await apiClient.request(
-      "/auth/login",
-      {
-        method: "POST",
+    return await kyClient
+      .post<SignInUser>("auth/login", {
         body: JSON.stringify(signInUser),
-      },
-      LoginResponseSchema
-    );
+      })
+      .json();
+  } catch (error: unknown) {
+    checkError(error);
+    throw error;
+  }
+}
 
-    if (response.error || !response.data) {
-      throw new Error(response.error || "Sign in failed");
-    }
-
-    return response.data;
+export async function mutateLogout(): Promise<void> {
+  try {
+    return await kyClient.post<SignInUser>("auth/logout").json();
   } catch (error: unknown) {
     checkError(error);
     throw error;

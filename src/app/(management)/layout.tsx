@@ -1,10 +1,17 @@
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { isAuthenticated } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const isAuthenticate = await isAuthenticated();
+  if (!isAuthenticate) {
+    redirect("sign-in");
+  }
+
   return (
     <SidebarInset>
       <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">

@@ -1,34 +1,15 @@
-import { managementBackendUrl } from "@/configs";
+import { kyClient } from "@/lib/api-client";
 import {
   BaseRestaurantMenu,
-  BaseRestaurantMenuSchema,
   CreateRestaurantMenu,
-  MenuArraySchema,
   MenuItem,
   UpdateRestaurantMenu,
 } from "@/types/menus-types";
 import z from "zod";
 
-const MANAGEMENT_BE_URL = managementBackendUrl();
-const DEFAULT_HEADERS = {
-  Accept: "application/json",
-  "Content-Type": "application/json",
-};
-
 export async function fetchAllMenus(): Promise<MenuItem[]> {
   try {
-    const response = await fetch(`${MANAGEMENT_BE_URL}/menu`, {
-      method: "GET",
-      headers: DEFAULT_HEADERS,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const responseBody = await response.json();
-
-    return MenuArraySchema.parse(responseBody);
+    return await kyClient.get<MenuItem[]>(`menu`).json();
   } catch (error: unknown) {
     checkError(error);
     throw error;
@@ -48,19 +29,11 @@ export async function mutateCreateRestaurantMenu({
       businessId,
     };
 
-    const response = await fetch(`${MANAGEMENT_BE_URL}/menu`, {
-      method: "POST",
-      headers: DEFAULT_HEADERS,
-      body: JSON.stringify(requestBody),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const responseBody = await response.json();
-
-    return BaseRestaurantMenuSchema.parse(responseBody);
+    return await kyClient
+      .post<BaseRestaurantMenu>(`menu`, {
+        body: JSON.stringify(requestBody),
+      })
+      .json();
   } catch (error: unknown) {
     checkError(error);
     throw error;
@@ -80,18 +53,9 @@ export async function mutateUpdateRestaurantMenu({
       businessId,
     };
 
-    const response = await fetch(
-      `${MANAGEMENT_BE_URL}/menu/${updatedRestaurant.id}`,
-      {
-        method: "PATCH",
-        headers: DEFAULT_HEADERS,
-        body: JSON.stringify(requestBody),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
+    await kyClient.patch(`menu/${updatedRestaurant.id}`, {
+      body: JSON.stringify(requestBody),
+    });
 
     // TODO should parse response to updated model
     //const responseBody = await response.json();
@@ -104,10 +68,7 @@ export async function mutateUpdateRestaurantMenu({
 
 export async function mutateDeleteMenu(menuId: number): Promise<void> {
   try {
-    const response = await fetch(`${MANAGEMENT_BE_URL}/menu/${menuId}`, {
-      method: "DELETE",
-      headers: DEFAULT_HEADERS,
-    });
+    const response = await kyClient.delete(`menu/${menuId}`);
 
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);

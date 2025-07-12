@@ -1,11 +1,12 @@
 "use client";
 
 import { queryUserBusinesses } from "@/actions/businesses.actions";
+import { isOnAuthPage } from "@/lib/utils";
 import { Business } from "@/types/businesses.types";
 import { Restaurant } from "@/types/restaurants.types";
 import { useQuery } from "@tanstack/react-query";
-import { createContext, useContext, useState } from "react";
-import { useAuth } from "./auth-provider";
+import { usePathname } from "next/navigation";
+import { createContext, useContext, useMemo } from "react";
 
 interface BusinessContextType {
   businesses: Business[] | undefined;
@@ -13,8 +14,6 @@ interface BusinessContextType {
   currentRestaurant: Restaurant | null;
   getRestaurantsForBusiness: (businessId: number) => Restaurant[];
   isLoadingBusinesses: boolean;
-  setCurrentBusiness: (business: Business | null) => void;
-  setCurrentRestaurant: (restaurant: Restaurant | null) => void;
 }
 
 const BusinessContext = createContext<BusinessContextType | undefined>(
@@ -22,32 +21,35 @@ const BusinessContext = createContext<BusinessContextType | undefined>(
 );
 
 export function BusinessProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
-
   const { data: businesses, isLoading: isLoadingBusinesses } = useQuery<
     Business[]
   >({
-    queryKey: [`user-${user?.id}`, "business"],
+    queryKey: ["businesses"],
     queryFn: async () => {
       return await queryUserBusinesses();
     },
+    enabled: !isOnAuthPage(),
   });
 
-  const [currentBusiness, setCurrentBusinessState] = useState<Business | null>(
-    null
-  );
+  const pathname = usePathname();
 
-  const [currentRestaurant, setCurrentRestaurantState] =
-    useState<Restaurant | null>(null);
+  const { businessId, restaurantId } = parseBusinessRestaurantIds(pathname);
 
-  const setCurrentBusiness = (business: Business | null) => {
-    setCurrentBusinessState(business);
-    setCurrentRestaurantState(null);
-  };
+  const currentBusiness = useMemo(() => {
+    if (!businesses || !businessId) return null;
+    return (
+      businesses.find((business) => business.id === Number(businessId)) ?? null
+    );
+  }, [businesses, businessId]);
 
-  const setCurrentRestaurant = (restaurant: Restaurant | null) => {
-    setCurrentRestaurantState(restaurant);
-  };
+  const currentRestaurant = useMemo(() => {
+    if (!currentBusiness || !restaurantId) return null;
+    return (
+      currentBusiness.restaurants.find(
+        (restaurant) => restaurant.id === Number(restaurantId)
+      ) ?? null
+    );
+  }, [currentBusiness, restaurantId]);
 
   function getRestaurantsForBusiness(businessId: number): Restaurant[] {
     const business = businesses?.find((business) => business.id === businessId);
@@ -67,13 +69,57 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
         getRestaurantsForBusiness,
         currentBusiness,
         currentRestaurant,
-        setCurrentBusiness,
-        setCurrentRestaurant,
       }}
     >
       {children}
     </BusinessContext.Provider>
   );
+}
+
+interface ParsedIds {
+  businessId: string | null;
+  restaurantId: string | null;
+}
+
+function parseBusinessRestaurantIds(path: string): ParsedIds {
+  // Handle root path
+  if (path === "/" || path === "") {
+    return { businessId: null, restaurantId: null };
+  }
+
+  const segments = path.replace(/^\//, "").split("/").filter(Boolean);
+
+  // Handle non-business paths
+  if (segments[0] !== "business" || segments.length < 2) {
+    return { businessId: null, restaurantId: null };
+  }
+
+  const businessId = segments[1];
+
+  // Validate business ID is a number
+  if (!businessId || isNaN(Number(businessId))) {
+    return { businessId: null, restaurantId: null };
+  }
+
+  // Handle business-only path: /business/[id]
+  if (segments.length === 2) {
+    return { businessId, restaurantId: null };
+  }
+
+  // Handle restaurant path: /business/[id]/restaurant/[id]
+  if (segments.length === 4 && segments[2] === "restaurant") {
+    const restaurantId = segments[3];
+    
+    // Validate restaurant ID is a number
+    if (!restaurantId || isNaN(Number(restaurantId))) {
+      return { businessId, restaurantId: null };
+    }
+    
+    return { businessId, restaurantId };
+  }
+
+  // For any other format, return business ID only
+  return { businessId, restaurantId: null };
 }
 
 export function useBusiness() {

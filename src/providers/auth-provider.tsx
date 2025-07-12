@@ -1,24 +1,22 @@
 "use client";
 
-import { queryGetUserInfo } from "@/actions/auth.actions";
-import { apiClient } from "@/lib/api-client";
+import {
+  mutateLogout,
+  mutateSignInUser,
+  queryGetUserInfo,
+} from "@/actions/auth.actions";
+import { isOnAuthPage } from "@/lib/utils";
+import { Role, User } from "@/types/auth.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type React from "react";
 import { createContext, useContext } from "react";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  roles: string[];
-}
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  hasRole: (role: string | string[]) => boolean;
+  hasRole: (role: Role | Role[]) => boolean;
   login: (credentials: { email: string; password: string }) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -30,46 +28,43 @@ export const AuthContext = createContext<AuthContextType | undefined>(
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const pathName = usePathname();
 
-  // Fetch user info from /auth/me (cookie is sent automatically)
   const { data: user, isLoading } = useQuery<User | null>({
-    queryKey: ["me"],
+    queryKey: ["user"],
     queryFn: async () => {
-      try {
-        return await queryGetUserInfo();
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (error) {
-        // TODO need to fix this, I should
-        return null;
-      }
+      return await queryGetUserInfo();
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    retry: false,
+    enabled: !isOnAuthPage(pathName),
   });
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
-      await apiClient.login(credentials);
+      await mutateSignInUser(credentials);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["me"] });
-      router.push("/");
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ["user"] }),
+        queryClient.refetchQueries({ queryKey: ["businesses"] }),
+      ]);
+      router.push("/business");
     },
   });
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiClient.logout();
-      queryClient.invalidateQueries({ queryKey: ["me"] });
+      await mutateLogout();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["me"] });
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      queryClient.invalidateQueries({ queryKey: ["businesses"] });
       router.push("/sign-in");
     },
   });
 
-  const hasRole = (requiredRoles: string | string[]): boolean => {
+  const hasRole = (requiredRoles: Role | Role[]): boolean => {
     if (!user?.roles) return false;
     const roles = Array.isArray(requiredRoles)
       ? requiredRoles

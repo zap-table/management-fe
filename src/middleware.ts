@@ -1,30 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_PATHS = ["/sign-in", "/sign-up", "/_next", "/favicon.ico"];
-
-function isPublicPath(path: string) {
-  return PUBLIC_PATHS.some((publicPath) => path.startsWith(publicPath));
-}
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const response = NextResponse.next();
 
-  if (isPublicPath(pathname)) {
-    return NextResponse.next();
+  if (pathname.startsWith("/business")) {
+    const segments = pathname.split("/").filter(Boolean);
+    
+    // Ensure we have at least /business/[id] format
+    if (segments.length >= 2 && segments[0] === "business") {
+      const businessId = segments[1];
+      
+      // Validate business ID is a number
+      if (businessId && !isNaN(Number(businessId))) {
+        response.cookies.set("business", businessId);
+        
+        // Check for restaurant path: /business/[id]/restaurant/[id]
+        if (segments.length >= 4 && segments[2] === "restaurant") {
+          const restaurantId = segments[3];
+          
+          // Validate restaurant ID is a number
+          if (restaurantId && !isNaN(Number(restaurantId))) {
+            response.cookies.set("restaurant", restaurantId);
+          }
+        }
+      }
+    }
+  } else {
+    // Clear cookies for non-business paths
+    response.cookies.delete("business");
+    response.cookies.delete("restaurant");
   }
 
-  // TODO, are we sure that we want the access token on cookies ?
-  const accessToken = request.cookies.get("access_token")?.value;
-
-  if (!accessToken) {
-    const signInUrl = new URL("/sign-in", request.url);
-    signInUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(signInUrl);
-  }
-
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
-  matcher: ["/(.*)"],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico, sitemap.xml, robots.txt (metadata files)
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
+  ],
 };
