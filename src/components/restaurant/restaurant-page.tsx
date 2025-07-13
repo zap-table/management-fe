@@ -12,7 +12,7 @@ interface RestaurantPageProps {
 
 export default function RestaurantPage({ params }: RestaurantPageProps) {
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-6 w-full">
       <Suspense fallback={<Skeleton className="h-20 w-full" />}>
         <RestaurantHeader restaurantId={params.restaurantId} />
       </Suspense>

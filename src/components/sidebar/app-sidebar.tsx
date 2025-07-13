@@ -1,16 +1,14 @@
 "use client";
 
 import {
-  Building2,
   CarrotIcon,
-  ChefHat,
   CookingPot,
   HandPlatter,
   Home,
   LogOut,
   NotebookIcon,
+  Receipt,
   Settings,
-  Store,
   TableIcon,
   Tags,
   User,
@@ -32,7 +30,6 @@ import {
 import { useAuth } from "@/providers/auth-provider";
 import { useBusiness } from "@/providers/business-provider";
 import { usePathname } from "next/navigation";
-import { BusinessRestaurantSelector } from "../business/business-restaurant-selector";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,61 +39,52 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Separator } from "../ui/separator";
+import { BusinessRestaurantSelector } from "./business-restaurant-selector";
 
-const ownerMenuItems = [
-  {
-    title: "Négocios",
-    url: "/businesses",
-    icon: Building2,
-  },
-  {
-    title: "Restaurantes",
-    url: "/restaurants",
-    icon: Store,
-  },
-];
-
-const menuItems = [
-  {
-    title: "Dashboard",
-    url: "/",
-    icon: Home,
-  },
+const businessItems = (businessId: string) => [
   {
     title: "Categorias",
-    url: "/categories",
+    url: `/business/${businessId}/categories`,
     icon: Tags,
   },
   {
     title: "Ingredientes",
-    url: "/ingredients",
+    url: `/business/${businessId}/ingredients`,
     icon: CarrotIcon,
   },
   {
     title: "Refeições",
-    url: "/meals",
+    url: `/business/${businessId}/meals`,
     icon: CookingPot,
   },
   {
     title: "Menus",
-    url: "/menus",
+    url: `/business/${businessId}/menus`,
     icon: NotebookIcon,
+  },
+];
+
+const restaurantItems = (businessId: string, restaurantId: string) => [
+  {
+    title: "Dashboard",
+    url: `/business/${businessId}/restaurant/${restaurantId}`,
+    icon: Home,
   },
   {
     title: "Mesas",
-    url: "/tables",
+    url: `/business/${businessId}/restaurant/${restaurantId}/tables`,
     icon: TableIcon,
   },
   {
     title: "Pedidos",
-    url: "/requests",
+    url: `/business/${businessId}/restaurant/${restaurantId}/orders`,
     icon: HandPlatter,
   },
 ];
 
 export function AppSidebar() {
   const { user, logout, hasRole, isLoading } = useAuth();
-  const { currentRestaurant } = useBusiness();
+  const { currentBusiness, currentRestaurant } = useBusiness();
   const pathname = usePathname();
 
   if (isLoading) {
@@ -109,7 +97,9 @@ export function AppSidebar() {
   }
 
   const showOwnerItems = hasRole("owner");
-  const hasRestaurantSelected = !!currentRestaurant;
+  const hasBusinessSelected = !!currentBusiness;
+  const hasBusinessAndRestaurantSelected =
+    hasBusinessSelected && !!currentRestaurant;
 
   const isActive = (url: string) => {
     if (url === "/") {
@@ -121,26 +111,34 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-2 p-2">
-          <ChefHat className="h-6 w-6" />
-          <span className="font-semibold text-lg">Zap Table</span>
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Receipt className="h-4 w-4" />
+          </div>
+          <div className="flex flex-col gap-0.5 leading-none">
+            <span className="font-semibold">Zap Table</span>
+            <span className="text-xs text-muted-foreground">
+              Gerir nunca foi tão rápido!
+            </span>
+          </div>
         </div>
-        <BusinessRestaurantSelector />
       </SidebarHeader>
 
       <Separator />
 
+      <BusinessRestaurantSelector />
+
       <SidebarContent className="gap-0">
-        {showOwnerItems ? (
+        {showOwnerItems && hasBusinessSelected ? (
           <SidebarGroup className="py-0">
             <SidebarGroupLabel>Gestão do Negócio</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {ownerMenuItems.map((item) => (
+                {businessItems(currentBusiness.id.toString()).map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       asChild
-                      disabled={!hasRestaurantSelected}
+                      disabled={!hasBusinessSelected}
                       isActive={isActive(item.url)}
                     >
                       <Link href={item.url}>
@@ -155,23 +153,29 @@ export function AppSidebar() {
           </SidebarGroup>
         ) : null}
 
-        <SidebarGroup className="py-0">
-          <SidebarGroupLabel>Gestão do restaurante</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <Link href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {hasBusinessAndRestaurantSelected ? (
+          <SidebarGroup className="py-0">
+            <SidebarGroupLabel>Gestão do restaurante</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {restaurantItems(
+                  currentBusiness?.id.toString(),
+                  currentRestaurant.id.toString()
+                ).map((item) => (
+                  // Disabled in case a restaurant is not selected
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                      <Link href={item.url}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ) : null}
       </SidebarContent>
 
       <SidebarFooter>
