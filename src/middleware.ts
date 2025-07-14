@@ -4,35 +4,49 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const response = NextResponse.next();
 
+  setBusinessAndRestaurantCookiesInResponse(response, pathname);
+
+  return response;
+}
+
+function setBusinessAndRestaurantCookiesInResponse(
+  response: NextResponse,
+  pathname: string
+) {
   if (pathname.startsWith("/business")) {
     const segments = pathname.split("/").filter(Boolean);
-    
-    // Ensure we have at least /business/[id] format
+
     if (segments.length >= 2 && segments[0] === "business") {
       const businessId = segments[1];
-      
-      // Validate business ID is a number
+
       if (businessId && !isNaN(Number(businessId))) {
-        response.cookies.set("business", businessId);
-        
+        response.cookies.set("business", businessId, {
+          httpOnly: false,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+        });
+
         // Check for restaurant path: /business/[id]/restaurant/[id]
         if (segments.length >= 4 && segments[2] === "restaurant") {
           const restaurantId = segments[3];
-          
-          // Validate restaurant ID is a number
+
           if (restaurantId && !isNaN(Number(restaurantId))) {
-            response.cookies.set("restaurant", restaurantId);
+            response.cookies.set("restaurant", restaurantId, {
+              httpOnly: false,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax",
+              maxAge: 60 * 60 * 24 * 7, // 7 days
+            });
           }
         }
       }
     }
-  } else {
-    // Clear cookies for non-business paths
+  } else if (pathname === "/" || pathname.startsWith("/auth")) {
+    // Only clear cookies for specific non-business paths
     response.cookies.delete("business");
     response.cookies.delete("restaurant");
   }
-
-  return response;
 }
 
 export const config = {
