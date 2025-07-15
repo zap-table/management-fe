@@ -1,6 +1,7 @@
 "use client";
 
 import { queryUserBusinesses } from "@/actions/businesses.actions";
+import { getBusinessRestaurantIdsClient } from "@/lib/business";
 import { isOnAuthPage } from "@/lib/utils";
 import { Business } from "@/types/businesses.types";
 import { Restaurant } from "@/types/restaurants.types";
@@ -33,7 +34,7 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
 
   const pathname = usePathname();
 
-  const { businessId, restaurantId } = parseBusinessRestaurantIds(pathname);
+  const { businessId, restaurantId } = getBusinessRestaurantIdsClient(pathname);
 
   const currentBusiness = useMemo(() => {
     if (!businesses || !businessId) return null;
@@ -74,52 +75,6 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
       {children}
     </BusinessContext.Provider>
   );
-}
-
-interface ParsedIds {
-  businessId: string | null;
-  restaurantId: string | null;
-}
-
-function parseBusinessRestaurantIds(path: string): ParsedIds {
-  // Handle root path
-  if (path === "/" || path === "") {
-    return { businessId: null, restaurantId: null };
-  }
-
-  const segments = path.replace(/^\//, "").split("/").filter(Boolean);
-
-  // Handle non-business paths
-  if (segments[0] !== "business" || segments.length < 2) {
-    return { businessId: null, restaurantId: null };
-  }
-
-  const businessId = segments[1];
-
-  // Validate business ID is a number
-  if (!businessId || isNaN(Number(businessId))) {
-    return { businessId: null, restaurantId: null };
-  }
-
-  // Handle business-only path: /business/[id]
-  if (segments.length === 2) {
-    return { businessId, restaurantId: null };
-  }
-
-  // Handle restaurant path: /business/[id]/restaurant/[id]
-  if (segments.length === 4 && segments[2] === "restaurant") {
-    const restaurantId = segments[3];
-    
-    // Validate restaurant ID is a number
-    if (!restaurantId || isNaN(Number(restaurantId))) {
-      return { businessId, restaurantId: null };
-    }
-    
-    return { businessId, restaurantId };
-  }
-
-  // For any other format, return business ID only
-  return { businessId, restaurantId: null };
 }
 
 export function useBusiness() {

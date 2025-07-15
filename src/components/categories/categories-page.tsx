@@ -23,13 +23,16 @@ export default function CategoriesPage() {
     useState<DetailedCategory | null>(null);
   const queryClient = useQueryClient();
 
-  const { currentBusiness } = useBusiness();
+  const { currentBusiness, isLoadingBusinesses } = useBusiness();
 
   const { data: categories = [], isLoading } = useQuery({
     queryKey: [`${currentBusiness?.id}-categories`],
     queryFn: async () =>
       await queryAllCategoryOfBusiness(Number(currentBusiness?.id)),
+    enabled: !!currentBusiness,
   });
+
+  const isLoadingData = isLoadingBusinesses || isLoading;
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => await mutateDeleteCategory(id),
@@ -109,7 +112,7 @@ export default function CategoriesPage() {
     },
   ];
 
-  if (isLoading) return <div>Carregando...</div>;
+  if (isLoadingData) return <div>Carregando Categorias...</div>;
 
   return (
     <DashboardSection>

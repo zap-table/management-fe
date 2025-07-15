@@ -23,6 +23,7 @@ export default function MenusPage() {
   const { data: menus = [], isLoading: isLoadingMenus } = useQuery<MenuItem[]>({
     queryKey: [`${currentBusiness?.id}-menus`],
     queryFn: fetchAllMenus,
+    enabled: !!currentBusiness,
   });
 
   const deleteMutation = useMutation({

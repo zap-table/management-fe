@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { useAuth } from "@/providers/auth-provider";
 import { useBusiness } from "@/providers/business-provider";
 import {
   AlertCircle,
@@ -20,12 +19,14 @@ import {
   Tags,
   TrendingUp,
 } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 export default function DashboardPage() {
-  const { user, isLoading } = useAuth();
+  const { status } = useSession();
+
   const { currentRestaurant } = useBusiness();
 
-  if (isLoading) {
+  if (status === "loading") {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -34,6 +35,10 @@ export default function DashboardPage() {
         </div>
       </div>
     );
+  }
+
+  if (status === "unauthenticated") {
+    return null;
   }
 
   if (!currentRestaurant) {

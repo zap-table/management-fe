@@ -27,6 +27,7 @@ export default function Ingredients() {
     queryKey: [`${currentBusiness?.id}-ingredients`],
     queryFn: async () =>
       await queryAllIngredientsOfBusiness(Number(currentBusiness?.id)),
+    enabled: !!currentBusiness,
   });
 
   const deleteMutation = useMutation({

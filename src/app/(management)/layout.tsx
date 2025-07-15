@@ -1,5 +1,6 @@
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { isAuthenticated } from "@/lib/auth";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
 
 export default async function AdminLayout({
@@ -7,9 +8,10 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const isAuthenticate = await isAuthenticated();
-  if (!isAuthenticate) {
-    redirect("sign-in");
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/sign-in`);
   }
 
   return (

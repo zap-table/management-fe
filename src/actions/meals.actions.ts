@@ -2,9 +2,11 @@ import { kyClient } from "@/lib/api-client";
 import { CreateMeal, Meal, UpdateMeal } from "@/types/meals.types";
 import z from "zod";
 
-export async function queryAllMeals(): Promise<Meal[]> {
+export async function queryMealsByBusiness(
+  businessId: number
+): Promise<Meal[]> {
   try {
-    return await kyClient.get<Meal[]>(`meal`).json();
+    return await kyClient.get<Meal[]>(`meal/business/${businessId}`).json();
   } catch (error: unknown) {
     checkError(error);
     throw error;
@@ -47,7 +49,6 @@ export async function mutateUpdateMeal({
       ...updateMeal,
       businessId,
     };
-
     await kyClient.patch(`meal/${mealId}`, {
       body: JSON.stringify(requestBody),
     });
