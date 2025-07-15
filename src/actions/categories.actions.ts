@@ -1,4 +1,4 @@
-import { kyClient } from "@/lib/api-client";
+import { createAuthenticatedClient } from "@/lib/api-client";
 import {
   CreateCategory,
   DetailedCategory,
@@ -10,6 +10,7 @@ export async function queryAllCategoryOfBusiness(
   businessId: number
 ): Promise<DetailedCategory[]> {
   try {
+    const kyClient = await createAuthenticatedClient();
     return await kyClient
       .get<DetailedCategory[]>(`category/business/${businessId}`)
       .json();
@@ -31,7 +32,7 @@ export async function mutateCreateCategory({
       ...createCategory,
       businessId,
     };
-
+    const kyClient = await createAuthenticatedClient();
     await kyClient.post("category", {
       body: JSON.stringify(requestBody),
     });
@@ -56,6 +57,8 @@ export async function mutateUpdateCategory({
       businessId,
     };
 
+    const kyClient = await createAuthenticatedClient();
+
     await kyClient.patch(`category/${categoryId}`, {
       body: JSON.stringify(requestBody),
     });
@@ -67,6 +70,7 @@ export async function mutateUpdateCategory({
 
 export async function mutateDeleteCategory(categoryId: number): Promise<void> {
   try {
+    const kyClient = await createAuthenticatedClient();
     await kyClient.delete(`category/${categoryId}`);
   } catch (error: unknown) {
     checkError(error);

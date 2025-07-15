@@ -35,7 +35,6 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const { businessId, restaurantId } = getBusinessRestaurantIdsClient(pathname);
-  console.log(businessId, restaurantId);
 
   const currentBusiness = useMemo(() => {
     if (!businesses || !businessId) return null;

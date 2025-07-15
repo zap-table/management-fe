@@ -1,4 +1,4 @@
-import { kyClient } from "@/lib/api-client";
+import { createAuthenticatedClient } from "@/lib/api-client";
 import {
   BaseRestaurantMenu,
   CreateRestaurantMenu,
@@ -9,6 +9,7 @@ import z from "zod";
 
 export async function fetchAllMenus(): Promise<MenuItem[]> {
   try {
+    const kyClient = await createAuthenticatedClient();
     return await kyClient.get<MenuItem[]>(`menu`).json();
   } catch (error: unknown) {
     checkError(error);
@@ -29,6 +30,7 @@ export async function mutateCreateRestaurantMenu({
       businessId,
     };
 
+    const kyClient = await createAuthenticatedClient();
     return await kyClient
       .post<BaseRestaurantMenu>(`menu`, {
         body: JSON.stringify(requestBody),
@@ -53,6 +55,8 @@ export async function mutateUpdateRestaurantMenu({
       businessId,
     };
 
+    const kyClient = await createAuthenticatedClient();
+
     await kyClient.patch(`menu/${updatedRestaurant.id}`, {
       body: JSON.stringify(requestBody),
     });
@@ -68,6 +72,7 @@ export async function mutateUpdateRestaurantMenu({
 
 export async function mutateDeleteMenu(menuId: number): Promise<void> {
   try {
+    const kyClient = await createAuthenticatedClient();
     const response = await kyClient.delete(`menu/${menuId}`);
 
     if (!response.ok) {

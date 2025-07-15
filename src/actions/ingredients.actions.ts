@@ -1,4 +1,4 @@
-import { kyClient } from "@/lib/api-client";
+import { createAuthenticatedClient } from "@/lib/api-client";
 import {
   CreateIngredient,
   DetailedIngredient,
@@ -10,6 +10,7 @@ export async function queryAllIngredientsOfBusiness(
   businessId: number
 ): Promise<DetailedIngredient[]> {
   try {
+    const kyClient = await createAuthenticatedClient();
     return await kyClient
       .get<DetailedIngredient[]>(`ingredient/business/${businessId}`)
       .json();
@@ -32,6 +33,7 @@ export async function mutateCreateIngredient({
       businessId,
     };
 
+    const kyClient = await createAuthenticatedClient();
     await kyClient.post(`ingredient`, {
       body: JSON.stringify(requestBody),
     });
@@ -56,6 +58,7 @@ export async function mutateUpdateIngredient({
       businessId,
     };
 
+    const kyClient = await createAuthenticatedClient();
     const response = await kyClient.patch(`ingredient/${ingredientId}`, {
       body: JSON.stringify(requestBody),
     });
@@ -73,6 +76,7 @@ export async function mutateDeleteIngredient(
   ingredientId: number
 ): Promise<void> {
   try {
+    const kyClient = await createAuthenticatedClient();
     await kyClient.delete(`ingredient/${ingredientId}`);
   } catch (error: unknown) {
     throw error;

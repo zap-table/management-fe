@@ -14,8 +14,8 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
 } from "@/components/ui/sidebar";
+import { hasRole } from "@/lib/auth";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/providers/auth-provider";
 import { useBusiness } from "@/providers/business-provider";
 import type { Business } from "@/types/businesses.types";
 import type { Restaurant } from "@/types/restaurants.types";
@@ -28,6 +28,7 @@ import {
   Plus,
   Store,
 } from "lucide-react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 interface BusinessRestaurantSelectorProps {
@@ -283,7 +284,8 @@ export function BusinessRestaurantSelector({
   showCreateActions = true,
   showSidebarWrapper = true,
 }: BusinessRestaurantSelectorProps) {
-  const { user, hasRole } = useAuth();
+  const { data: session, status } = useSession();
+
   const {
     businesses,
     isLoadingBusinesses,
@@ -292,9 +294,15 @@ export function BusinessRestaurantSelector({
     currentRestaurant,
   } = useBusiness();
 
-  if (isLoadingBusinesses) {
+  if (isLoadingBusinesses || status === "loading") {
     return <BusinessRestaurantSelectorSkeleton />;
   }
+
+  if (status === "unauthenticated" || !session) {
+    return null;
+  }
+
+  const { user } = session;
 
   if (!businesses || businesses.length === 0) {
     return (
@@ -314,7 +322,7 @@ export function BusinessRestaurantSelector({
     );
   }
 
-  const isReadOnly = !user || hasRole("staff");
+  const isReadOnly = !user || hasRole(user, "staff");
 
   const content = isReadOnly ? (
     <ReadOnlySelector

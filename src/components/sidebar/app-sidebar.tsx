@@ -27,8 +27,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { useAuth } from "@/providers/auth-provider";
+import { hasRole } from "@/lib/auth";
 import { useBusiness } from "@/providers/business-provider";
+import { signOut, useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import {
   DropdownMenu,
@@ -83,23 +84,31 @@ const restaurantItems = (businessId: string, restaurantId: string) => [
 ];
 
 export function AppSidebar() {
-  const { user, logout, hasRole, isLoading } = useAuth();
+  const { data: session, status } = useSession();
   const { currentBusiness, currentRestaurant } = useBusiness();
   const pathname = usePathname();
 
-  if (isLoading) {
-    // TODO should create skeleton for loading of side bar
+  if (status === "loading") {
     return null;
   }
 
-  if (!user) {
+  if (status === "unauthenticated" || !session) {
     return null;
   }
 
-  const showOwnerItems = hasRole("owner");
+  const { user } = session;
+
+  const showOwnerItems = hasRole(user, "owner");
+
   const hasBusinessSelected = !!currentBusiness;
   const hasBusinessAndRestaurantSelected =
     hasBusinessSelected && !!currentRestaurant;
+
+  const signOutClick = async () => {
+    await signOut({
+      callbackUrl: `${window.location.origin}/sign-in`,
+    });
+  };
 
   const isActive = (url: string) => {
     if (url === "/") {
@@ -206,7 +215,7 @@ export function AppSidebar() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout}>
+                <DropdownMenuItem onClick={() => signOutClick()}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
                 </DropdownMenuItem>
