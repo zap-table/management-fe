@@ -1,5 +1,5 @@
-import { managementBackendUrl } from "@/configs";
 import ky from "ky";
+import { getServerSession } from "next-auth/next";
 import { getSession } from "next-auth/react";
 
 const DEFAULT_HEADERS = {
@@ -9,21 +9,25 @@ const DEFAULT_HEADERS = {
 
 export const kyClient = ky.create({
   credentials: "include",
-  prefixUrl: managementBackendUrl,
   headers: DEFAULT_HEADERS,
+  prefixUrl: process.env.NEXT_PUBLIC_MANAGEMENT_BACKEND_URL,
+  hooks: {
+    beforeRequest: [
+      async (request) => {
+        let accessToken: string | null | undefined = null;
+
+        if (typeof window === "undefined") {
+          const session = await getServerSession();
+          accessToken = session?.accessToken;
+        } else {
+          const session = await getSession();
+          accessToken = session?.accessToken;
+        }
+
+        if (accessToken) {
+          request.headers.set("Authorization", `Bearer ${accessToken}`);
+        }
+      },
+    ],
+  },
 });
-
-export const createAuthenticatedClient = async () => {
-  const session = await getSession();
-
-  return ky.create({
-    credentials: "include",
-    prefixUrl: managementBackendUrl,
-    headers: {
-      ...DEFAULT_HEADERS,
-      ...(session?.accessToken && {
-        Authorization: `Bearer ${session.accessToken}`,
-      }),
-    },
-  });
-};

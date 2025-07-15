@@ -1,4 +1,4 @@
-import { createAuthenticatedClient } from "@/lib/api-client";
+import { kyClient } from "@/lib/api-client";
 import { SignUpOwnerUser } from "@/types/auth.types";
 import z from "zod";
 
@@ -8,7 +8,6 @@ export async function mutateSignUpOwnerUser(
   try {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordConfirmation, ...requestBody } = signUpOwnerUser;
-    const kyClient = await createAuthenticatedClient();
     await kyClient.post("auth/sign-up", {
       body: JSON.stringify(requestBody),
     });

@@ -42,7 +42,12 @@ function setBusinessAndRestaurantCookiesInResponse(
         }
       }
     }
-  } else if (pathname === "/" || pathname.startsWith("/auth")) {
+  } else if (
+    pathname === "/" ||
+    pathname.startsWith("/auth") ||
+    pathname === "/sign-in" ||
+    pathname === "/sign-up"
+  ) {
     // Only clear cookies for specific non-business paths
     response.cookies.delete("business");
     response.cookies.delete("restaurant");

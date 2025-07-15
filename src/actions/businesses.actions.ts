@@ -1,10 +1,9 @@
-import { createAuthenticatedClient } from "@/lib/api-client";
+import { kyClient } from "@/lib/api-client";
 import { Business } from "@/types/businesses.types";
 import z from "zod";
 
 export async function queryUserBusinesses(): Promise<Business[]> {
   try {
-    const kyClient = await createAuthenticatedClient();
     return await kyClient.get<Business[]>("business/user").json();
   } catch (error: unknown) {
     checkError(error);
