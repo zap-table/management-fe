@@ -1,6 +1,7 @@
 import ky from "ky";
-import { getServerSession } from "next-auth/next";
+import { getServerSession } from "next-auth";
 import { getSession } from "next-auth/react";
+import { authOptions } from "./auth";
 
 const DEFAULT_HEADERS = {
   Accept: "application/json",
@@ -17,7 +18,8 @@ export const kyClient = ky.create({
         let accessToken: string | null | undefined = null;
 
         if (typeof window === "undefined") {
-          const session = await getServerSession();
+          const session = await getServerSession(authOptions);
+
           accessToken = session?.accessToken;
         } else {
           const session = await getSession();
