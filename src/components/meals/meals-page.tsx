@@ -1,6 +1,9 @@
 "use client";
 
-import { mutateDeleteMeal, queryAllMeals } from "@/actions/meals.actions";
+import {
+  mutateDeleteMeal,
+  queryMealsByBusiness,
+} from "@/actions/meals.actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
@@ -22,7 +25,9 @@ export default function MealsPage() {
 
   const { data: meals = [], isLoading: isLoadingMeals } = useQuery<Meal[]>({
     queryKey: [`${currentBusiness?.id}-meals`],
-    queryFn: queryAllMeals,
+    enabled: !!currentBusiness,
+    queryFn: async () =>
+      await queryMealsByBusiness(Number(currentBusiness?.id)),
   });
 
   const deleteMutation = useMutation({

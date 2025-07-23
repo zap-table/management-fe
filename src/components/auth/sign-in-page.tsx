@@ -1,6 +1,5 @@
 "use client";
 
-import { mutateSignInUser } from "@/actions/auth.actions";
 import { Button } from "@/components/ui/button";
 import {
   CardContent,
@@ -13,7 +12,7 @@ import { SignInUser, SignInUserSchema } from "@/types/auth.types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { ChefHat } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import {
@@ -26,8 +25,6 @@ import {
 } from "../ui/form";
 
 export function SignInPage() {
-  const router = useRouter();
-
   const form = useForm<SignInUser>({
     resolver: zodResolver(SignInUserSchema),
     defaultValues: {
@@ -38,10 +35,16 @@ export function SignInPage() {
 
   const mutation = useMutation({
     mutationFn: async (data: SignInUser) => {
-      return await mutateSignInUser(data);
-    },
-    onSuccess: () => {
-      router.push("/");
+      const res = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        callbackUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/business`,
+      });
+
+      if (!res?.ok) {
+        console.error("error logging", res);
+        throw new Error(`Non Ok response code - ${res?.status}`);
+      }
     },
     onError: (error: Error) => {
       toast.error(error.message);

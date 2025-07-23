@@ -31,7 +31,6 @@ export async function mutateCreateCategory({
       ...createCategory,
       businessId,
     };
-
     await kyClient.post("category", {
       body: JSON.stringify(requestBody),
     });
