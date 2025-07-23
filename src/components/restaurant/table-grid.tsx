@@ -1,25 +1,24 @@
-'use client';
+"use client";
 
-import { Table } from '@/types';
-import { useQuery } from '@tanstack/react-query';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { queryTablesByBusinessAndRestaurantId } from "@/lib/http/tables";
+import { Table } from "@/types/tables.types";
+import { useQuery } from "@tanstack/react-query";
 
 interface TableGridProps {
+  businessId: string;
   restaurantId: string;
 }
 
-export function TableGrid({ restaurantId }: TableGridProps) {
+export function TableGrid({ businessId, restaurantId }: TableGridProps) {
   const { data: tables, isLoading } = useQuery<Table[]>({
-    queryKey: ['restaurant-tables', restaurantId],
+    queryKey: ["restaurant-tables", restaurantId],
     queryFn: async () => {
-      const response = await fetch(`/api/restaurants/${restaurantId}/tables`);
-      return response.json();
+      return await queryTablesByBusinessAndRestaurantId(
+        businessId,
+        restaurantId
+      );
     },
   });
 
@@ -33,9 +32,13 @@ export function TableGrid({ restaurantId }: TableGridProps) {
         <Card key={table.id}>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              Mesa {table.table_number}
-              <Badge variant={table.status === 'open' ? 'success' : 'destructive'}>
-                {table.status === 'open' ? 'Livre' : 'Ocupada'}
+              Mesa {table.tableNumber}
+              <Badge
+                variant={
+                  table.status === "available" ? "default" : "destructive"
+                }
+              >
+                {table.status === "available" ? "Livre" : "Ocupada"}
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -48,4 +51,4 @@ export function TableGrid({ restaurantId }: TableGridProps) {
       ))}
     </div>
   );
-} 
+}

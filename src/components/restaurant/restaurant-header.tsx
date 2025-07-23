@@ -3,6 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
+import { queryRestaurantById } from "@/lib/http/restaurants";
 import { Restaurant } from "@/types/restaurants.types";
 import { useQuery } from "@tanstack/react-query";
 import { MapPin, Phone } from "lucide-react";
@@ -15,12 +16,12 @@ export function RestaurantHeader({ restaurantId }: RestaurantHeaderProps) {
   const { data: restaurant, isLoading } = useQuery<Restaurant>({
     queryKey: ["restaurant", restaurantId],
     queryFn: async () => {
-      const response = await fetch(`/api/restaurants/${restaurantId}`);
-      return response.json();
+      return await queryRestaurantById(restaurantId);
     },
   });
 
   if (isLoading) {
+    // TODO implement a skeleton loader
     return <div>Carregando...</div>;
   }
 

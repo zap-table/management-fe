@@ -3,6 +3,7 @@ import RestaurantPage from "@/components/restaurant/restaurant-page";
 interface RestaurantDashboardProps {
   params: {
     restaurantId: string;
+    businessId: string;
   };
 }
 
