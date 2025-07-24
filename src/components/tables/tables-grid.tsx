@@ -1,164 +1,131 @@
-'use client';
-
-import { Table } from '@/types';
-import { useQuery } from '@tanstack/react-query';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Lock, Unlock, Printer, Download } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
+import { Card, CardContent } from "@/components/ui/card";
+import { queryTablesByBusinessAndRestaurantId } from "@/lib/http/tables";
+import { Table, TableStatus } from "@/types/tables.types";
+import { TablesGridClient } from "./tables-grid-client";
 
 interface TablesGridProps {
   businessId: string;
-  restaurantName: string;
+  restaurantId: string;
+  searchQuery: string;
+  statusFilter: TableStatus | "all";
 }
 
-export const TablesGrid: React.FC<TablesGridProps> = ({ businessId, restaurantName }) => {
-  const { data: tables, isLoading, error } = useQuery<Table[]>({
-    queryKey: ['tables', businessId],
-    queryFn: async () => {
-      try {
-        const response = await fetch(`/api/business/${businessId}/tables`);
-        
-        if (!response.ok) {
-          const fallbackResponse = await fetch('/api/tables');
-          if (!fallbackResponse.ok) {
-            throw new Error('Falha ao carregar mesas');
-          }
-          return fallbackResponse.json();
-        }
-        
-        return response.json();
-      } catch (error) {
-        console.error('Erro ao buscar mesas:', error);
-        throw error;
-      }
-    },
-  });
+export async function TablesGrid({
+  businessId,
+  restaurantId,
+  searchQuery,
+  statusFilter,
+}: TablesGridProps) {
+  let tables: Table[] = [];
+  let error: string | null = null;
 
-  // Function to generate QR code via external API
-  const downloadQRCode = (table: Table) => {
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(table.qr_code)}&format=png&download=1`;
-    window.open(qrCodeUrl, '_blank');
-  };
-
-  // Function to print QR code via external API
-  const printQRCode = (table: Table) => {
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(table.qr_code)}`;
-    
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-    
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>QR Code Table ${table.table_number}</title>
-          <style>
-            body { margin: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif; }
-            .container { text-align: center; }
-            h1 { font-size: 24px; margin-bottom: 8px; }
-            h2 { font-size: 20px; margin-bottom: 16px; }
-            img { max-width: 300px; margin-bottom: 16px; }
-            p { font-size: 14px; color: #666; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>${restaurantName}</h1>
-            <h2>Table ${table.table_number}</h2>
-            <img src="${qrCodeUrl}" alt="QR Code" />
-            <p>Scan to place your order</p>
-          </div>
-          <script>
-            setTimeout(() => { window.print(); window.close(); }, 500);
-          </script>
-        </body>
-      </html>
-    `);
-    
-    printWindow.document.close();
-  };
-
-  // Função auxiliar para determinar o título do botão
-  const getTableStatusButtonTitle = (table: Table) => {
-    return table.active ? "Lock Table" : "Unlock Table";
-  };
-
-  // Função auxiliar para determinar a variante do badge
-  const getBadgeVariant = (status: string) => {
-    return status === 'open' ? 'secondary' : 'destructive';
-  };
-
-  // Função auxiliar para determinar o texto do badge
-  const getBadgeText = (status: string) => {
-    return status === 'open' ? 'Available' : 'Occupied';
-  };
-
-  if (isLoading) {
-    return <div>Loading...</div>;
+  try {
+    tables = await queryTablesByBusinessAndRestaurantId(
+      businessId,
+      restaurantId
+    );
+  } catch (e) {
+    error = (e as Error).message;
   }
 
   if (error) {
-    return <div>Error loading tables: {(error as Error).message}</div>;
+    return <div>Erro ao carregar mesas: {error}</div>;
   }
 
-  if (!tables || tables.length === 0) {
-    return <div>No tables found. Please add some tables.</div>;
+  const filteredTables = tables.filter((table) => {
+    const matchesSearch = table.tableNumber
+      .toString()
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || table.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  if (!filteredTables || filteredTables.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-gray-500 text-lg">Nenhuma mesa encontrada</div>
+        <p className="text-gray-400 mt-2">
+          {searchQuery || statusFilter !== "all"
+            ? "Tente ajustar sua pesquisa ou critérios de filtro"
+            : "Por favor, adicione algumas mesas."}
+        </p>
+      </div>
+    );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {tables.map((table) => (
-        <Card key={table.id} className="relative">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              Table {table.table_number}
-              <Badge variant={getBadgeVariant(table.status)}>
-                {getBadgeText(table.status)}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-center p-4">
-              <QRCodeSVG value={table.qr_code} size={120} />
+    <div className="max-w-7xl mx-auto">
+      <TableStatsOverview tables={filteredTables} />
+
+      <div className="mt-8">
+        <TablesGridClient
+          tables={filteredTables}
+          businessId={businessId}
+          restaurantId={restaurantId}
+        />
+      </div>
+    </div>
+  );
+}
+
+function TableStatsOverview({ tables }: { tables: Table[] }) {
+  const totalTables = tables.length;
+  const availableTables = tables.filter((t) => t.status === "available").length;
+  const occupiedTables = tables.filter((t) => t.status === "occupied").length;
+  const reservedTables = tables.filter((t) => t.status === "reserved").length;
+
+  const stats = [
+    {
+      label: "Total Tables",
+      value: totalTables,
+      color: "text-slate-700",
+      bgColor: "bg-slate-50",
+      borderColor: "border-slate-200",
+    },
+    {
+      label: "Available",
+      value: availableTables,
+      color: "text-green-700",
+      bgColor: "bg-green-50",
+      borderColor: "border-green-200",
+    },
+    {
+      label: "Occupied",
+      value: occupiedTables,
+      color: "text-red-700",
+      bgColor: "bg-red-50",
+      borderColor: "border-red-200",
+    },
+    {
+      label: "Reserved",
+      value: reservedTables,
+      color: "text-amber-700",
+      bgColor: "bg-amber-50",
+      borderColor: "border-amber-200",
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {stats.map((stat) => (
+        <Card
+          key={stat.label}
+          className={`${stat.bgColor} ${stat.borderColor} border shadow-sm`}
+        >
+          <CardContent className="">
+            <div className="text-center">
+              <p className={`text-2xl font-bold ${stat.color} leading-none`}>
+                {stat.value}
+              </p>
+              <p className="text-xs font-medium text-gray-600 mt-1">
+                {stat.label}
+              </p>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => downloadQRCode(table)}
-              title="Download QR Code"
-            >
-              <Download size={16} />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => printQRCode(table)}
-              title="Print QR Code"
-            >
-              <Printer size={16} />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                // Implement table status toggle
-              }}
-              title={getTableStatusButtonTitle(table)}
-            >
-              {table.active ? <Lock size={16} /> : <Unlock size={16} />}
-            </Button>
-          </CardFooter>
         </Card>
       ))}
     </div>
   );
-} 
+}

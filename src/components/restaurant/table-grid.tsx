@@ -13,7 +13,8 @@ interface TableGridProps {
 
 export function TableGrid({ businessId, restaurantId }: TableGridProps) {
   const { data: tables, isLoading } = useQuery<Table[]>({
-    queryKey: ["restaurant-tables", restaurantId],
+    // TODO, query keys should be consistent, should extract to a constant
+    queryKey: ["tables", restaurantId],
     queryFn: async () => {
       return await queryTablesByBusinessAndRestaurantId(
         businessId,

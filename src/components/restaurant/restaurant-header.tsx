@@ -34,17 +34,21 @@ export function RestaurantHeader({ restaurantId }: RestaurantHeaderProps) {
         />
       </div>
       <Separator />
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardContent className="flex items-center p-4">
             <MapPin className="h-5 w-5 mr-2 text-muted-foreground" />
-            <span className="text-sm">{restaurant?.address}</span>
+            <span className="text-sm">
+              {restaurant?.address || "Endereço não disponível"}{" "}
+            </span>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="flex items-center p-4">
             <Phone className="h-5 w-5 mr-2 text-muted-foreground" />
-            <span className="text-sm">{restaurant?.phoneNumber}</span>
+            <span className="text-sm">
+              {restaurant?.phoneNumber || "Número de telefone não disponível"}
+            </span>
           </CardContent>
         </Card>
       </div>

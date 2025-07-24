@@ -2,6 +2,7 @@ import { RestaurantHeader } from "@/components/restaurant/restaurant-header";
 import { TableGrid } from "@/components/restaurant/table-grid";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Suspense } from "react";
+import { Separator } from "../ui/separator";
 
 interface RestaurantPageProps {
   params: {
@@ -12,12 +13,16 @@ interface RestaurantPageProps {
 
 export default function RestaurantPage({ params }: RestaurantPageProps) {
   return (
-    <div className="flex flex-col gap-6 p-6 w-full">
+    <div className="flex flex-col gap-2 p-6 w-full">
       <Suspense fallback={<Skeleton className="h-20 w-full" />}>
         <RestaurantHeader restaurantId={params.restaurantId} />
       </Suspense>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <Separator className="my-6" />
+
+      <div className="grid gap-6">
+        <h3 className="text-lg font-semibold">Mesas</h3>
+
         <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
           <TableGrid
             businessId={params.businessId}

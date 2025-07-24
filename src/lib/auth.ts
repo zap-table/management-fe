@@ -1,8 +1,8 @@
 // src/lib/auth.ts
 import { User as BEUser, LoginResponse, Role } from "@/types/auth.types";
+import ky from "ky";
 import { NextAuthOptions, User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { kyClient } from "./api-client";
 
 export const hasRole = (
   user: BEUser,
@@ -13,6 +13,13 @@ export const hasRole = (
   return roles.some((role) => user.roles.includes(role));
 };
 
+// Create a separate ky instance for auth to avoid circular dependency
+const authClient = ky.create({
+  prefixUrl: process.env.NEXT_PUBLIC_MANAGEMENT_BACKEND_URL,
+  timeout: 10000,
+  credentials: "include",
+});
+
 declare module "next-auth/jwt" {
   interface JWT {
     id?: string | null;
@@ -22,6 +29,7 @@ declare module "next-auth/jwt" {
     accessToken?: string | null;
     refreshToken?: string | null;
     accessTokenExpires?: number | null;
+    refreshing?: boolean;
   }
 }
 
@@ -59,7 +67,7 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) return null;
 
         try {
-          const response = await kyClient
+          const response = await authClient
             .post<LoginResponse>(`auth/login`, {
               json: {
                 email: credentials.email,
@@ -104,6 +112,12 @@ export const authOptions: NextAuthOptions = {
         token.accessToken = user.accessToken;
         token.refreshToken = user.refreshToken;
         token.accessTokenExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
+        token.refreshing = false; // Add refreshing flag
+      }
+
+      // Prevent infinite refresh loops
+      if (token.refreshing) {
+        return token;
       }
 
       // Check if we need to refresh the access token
@@ -112,9 +126,10 @@ export const authOptions: NextAuthOptions = {
         token.accessTokenExpires &&
         Date.now() >= token.accessTokenExpires - 5 * 60 * 1000 // Refresh 5 minutes before expiry
       ) {
+        token.refreshing = true; // Set flag to prevent loops
         try {
-          const refreshResponse = await kyClient
-            .post<LoginResponse>(`auth/refresh`, {
+          const refreshResponse = await authClient
+            .post<LoginResponse>(`auth/refresh-token`, {
               json: {
                 refreshToken: token.refreshToken,
               },
@@ -125,20 +140,21 @@ export const authOptions: NextAuthOptions = {
             token.accessToken = refreshResponse.access_token;
             token.refreshToken = refreshResponse.refresh_token;
             token.accessTokenExpires = Date.now() + 15 * 60 * 1000; // Update expiry
+            token.refreshing = false; // Clear refreshing flag
             console.log("Token refreshed successfully");
           } else {
-            console.error("No new tokens from refresh endpoint");
             // Clear tokens if refresh failed
             token.accessToken = null;
             token.refreshToken = null;
             token.accessTokenExpires = null;
+            token.refreshing = false; // Clear refreshing flag
           }
         } catch (error) {
-          console.error("Error refreshing token:", error);
           // Clear tokens if refresh failed
           token.accessToken = null;
           token.refreshToken = null;
           token.accessTokenExpires = null;
+          token.refreshing = false; // Clear refreshing flag
         }
       }
 
@@ -170,7 +186,7 @@ export const authOptions: NextAuthOptions = {
     async signOut({ token }) {
       if (token.accessToken) {
         try {
-          await kyClient.post(`auth/logout`, {
+          await authClient.post(`auth/logout`, {
             headers: {
               Authorization: `Bearer ${token.accessToken}`,
             },
