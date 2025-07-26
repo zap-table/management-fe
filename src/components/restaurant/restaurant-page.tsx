@@ -2,6 +2,7 @@ import { RestaurantHeader } from "@/components/restaurant/restaurant-header";
 import { TableGrid } from "@/components/restaurant/table-grid";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Suspense } from "react";
+import DashboardSection from "../layout/dashboard-section";
 import { Separator } from "../ui/separator";
 
 interface RestaurantPageProps {
@@ -13,7 +14,7 @@ interface RestaurantPageProps {
 
 export default function RestaurantPage({ params }: RestaurantPageProps) {
   return (
-    <div className="flex flex-col gap-2 p-6 w-full">
+    <DashboardSection>
       <Suspense fallback={<Skeleton className="h-20 w-full" />}>
         <RestaurantHeader restaurantId={params.restaurantId} />
       </Suspense>
@@ -30,6 +31,6 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
           />
         </Suspense>
       </div>
-    </div>
+    </DashboardSection>
   );
 }

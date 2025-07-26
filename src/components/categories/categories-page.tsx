@@ -6,11 +6,10 @@ import {
 } from "@/actions/categories.actions";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import { Heading } from "@/components/ui/heading";
 import { useBusiness } from "@/providers/business-provider";
 import { DetailedCategory } from "@/types/categories.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Trash } from "lucide-react";
+import { Pencil, Trash } from "lucide-react";
 import { CSSProperties, useState } from "react";
 import { toast } from "sonner";
 import DashboardSection from "../layout/dashboard-section";
@@ -56,11 +55,6 @@ export default function CategoriesPage() {
   const handleDelete = async (id: number) => {
     if (!confirm("Tem certeza que deseja excluir esta categoria?")) return;
     deleteMutation.mutate(id);
-  };
-
-  const handleAddNew = () => {
-    setEditingCategory(null);
-    setOpen(true);
   };
 
   const handleDialogSuccess = () => {
@@ -116,17 +110,6 @@ export default function CategoriesPage() {
 
   return (
     <DashboardSection>
-      <div className="flex items-center justify-between mb-4">
-        <Heading
-          title="Categorias"
-          description="Gerencie as categorias do seu cardápio"
-        />
-        <Button onClick={handleAddNew}>
-          <Plus className="mr-2 h-4 w-4" />
-          Adicionar Categoria
-        </Button>
-      </div>
-
       <DataTable
         columns={columns}
         data={categories}

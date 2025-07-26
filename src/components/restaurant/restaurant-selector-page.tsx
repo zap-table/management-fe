@@ -4,6 +4,7 @@ import { useBusiness } from "@/providers/business-provider";
 import { Restaurant } from "@/types/restaurants.types";
 import { Pencil, Trash } from "lucide-react";
 import Link from "next/link";
+import DashboardSection from "../layout/dashboard-section";
 import { Button } from "../ui/button";
 import { DataTable } from "../ui/data-table";
 import { Heading } from "../ui/heading";
@@ -52,7 +53,7 @@ export default function RestaurantSelectorPage() {
   ];
 
   return (
-    <div className="p-6 w-full">
+    <DashboardSection>
       <div className="flex items-center justify-between mb-8">
         <Heading
           title="Restaurantes"
@@ -66,6 +67,6 @@ export default function RestaurantSelectorPage() {
         searchKey="name"
         searchPlaceholder="Pesquise pelo nome"
       />
-    </div>
+    </DashboardSection>
   );
 }
