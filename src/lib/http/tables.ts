@@ -1,6 +1,7 @@
 import {
   ChangeTableStatusRequest,
   Table,
+  UpdateTable,
   UpdateTableRequest,
 } from "@/types/tables.types";
 import { kyClient } from "../api-client";
@@ -30,6 +31,45 @@ export async function queryTablesByBusinessAndRestaurantId(
   } catch (error: unknown) {
     // Remove from cache on error
     console.error("Failed to fetch tables:", error);
+    throw error;
+  }
+}
+
+export async function mutateCreateTable({
+  restaurantId,
+  createTable,
+}: {
+  restaurantId: number;
+  createTable: UpdateTable;
+}): Promise<void> {
+  try {
+    const requestBody = {
+      ...createTable,
+      restaurantId,
+    };
+
+    await kyClient.post(`table`, {
+      body: JSON.stringify(requestBody),
+    });
+  } catch (error: unknown) {
+    console.error("Failed to create table:", error);
+    throw error;
+  }
+}
+
+export async function mutateUpdateTable({
+  tableId,
+  updateTable,
+}: {
+  tableId: number;
+  updateTable: UpdateTableRequest;
+}): Promise<void> {
+  try {
+    await kyClient.put(`table/${tableId}`, {
+      body: JSON.stringify(updateTable),
+    });
+  } catch (error: unknown) {
+    console.error("Failed to update table:", error);
     throw error;
   }
 }

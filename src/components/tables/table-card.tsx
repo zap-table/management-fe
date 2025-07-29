@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Eye, MoreVertical, QrCode } from "lucide-react";
 
-import { formatLastUpdated } from "@/lib/date";
 import { Table, TableStatus } from "@/types/tables.types";
 
 interface TableCardProps {
@@ -92,10 +91,6 @@ export function TableCard({
           <Badge className={config.badgeClass} variant={config.badgeVariant}>
             {table.status.charAt(0).toUpperCase() + table.status.slice(1)}
           </Badge>
-
-          <p className="text-xs text-gray-500">
-            Atualizado {formatLastUpdated(new Date(table.updatedAt))}
-          </p>
         </div>
 
         <div className="flex gap-2 mt-4">
