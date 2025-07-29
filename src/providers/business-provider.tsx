@@ -22,17 +22,20 @@ const BusinessContext = createContext<BusinessContextType | undefined>(
 );
 
 export function BusinessProvider({ children }: { children: React.ReactNode }) {
-  const { data: businesses, isLoading: isLoadingBusinesses } = useQuery<
-    Business[]
-  >({
+  const pathname = usePathname();
+  const isAuthPage = isOnAuthPage();
+  // Only fetch businesses when we're on a management page that needs them
+  const shouldFetchBusinesses = !isAuthPage;
+
+  const { data: businesses, isLoading: isLoadingBusinesses } = useQuery({
     queryKey: ["businesses"],
-    queryFn: async () => {
+    queryFn: async (): Promise<Business[]> => {
       return await queryUserBusinesses();
     },
-    enabled: !isOnAuthPage(),
+    enabled: shouldFetchBusinesses,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes (replaces cacheTime)
   });
-
-  const pathname = usePathname();
 
   const { businessId, restaurantId } = getBusinessRestaurantIdsClient(pathname);
 

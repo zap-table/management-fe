@@ -104,11 +104,8 @@ export default function Ingredients() {
 
   return (
     <DashboardSection>
-      <div className="flex items-center justify-between mb-4">
-        <Heading
-          title="Ingredientes"
-          description="Gerencie os ingredientes do seu cardápio"
-        />
+      <div className="flex items-center justify-between">
+        <Heading title="Ingredientes" />
         <Button onClick={handleAddNew}>
           <Plus className="mr-2 h-4 w-4" />
           Adicionar Ingrediente

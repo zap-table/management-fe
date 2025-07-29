@@ -18,7 +18,6 @@ export const BUSINESS_PATHS = {
   RESTAURANT_PREFIX: "/restaurant",
 } as const;
 
-// Cookie names
 export const COOKIE_NAMES = {
   BUSINESS: "business",
   RESTAURANT: "restaurant",
@@ -33,10 +32,10 @@ export const QUERY_KEYS = {
 } as const;
 
 export const ERROR_MESSAGES = {
-  AUTHENTICATION_REQUIRED: "Authentication required",
-  ACCESS_DENIED: "Access denied",
-  SESSION_EXPIRED: "Session expired",
-  INVALID_PATH_FORMAT: "Invalid path format",
+  AUTHENTICATION_REQUIRED: "Autenticação necessária",
+  ACCESS_DENIED: "Acesso negado",
+  SESSION_EXPIRED: "Sessão expirada",
+  INVALID_PATH_FORMAT: "Formato de caminho inválido",
 } as const;
 
 export const PATHS = {
@@ -46,3 +45,6 @@ export const PATHS = {
   UNAUTHORIZED: "/unauthorized",
   DASHBOARD: "/",
 } as const;
+
+export const INITIAL_LOGGED_PATH = PATHS.BUSINESS;
+export const UNAUTHENTICATED_PATH = PATHS.SIGN_IN;

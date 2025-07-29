@@ -7,13 +7,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import { Heading } from "@/components/ui/heading";
 import { useBusiness } from "@/providers/business-provider";
 import { Meal } from "@/types/meals.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import DashboardSection from "../layout/dashboard-section";
+import { Heading } from "../ui/heading";
 import { MealsEditor } from "./meals-editor";
 
 export default function MealsPage() {
@@ -44,6 +45,11 @@ export default function MealsPage() {
     },
   });
 
+  function handleAddNew(): void {
+    setEditingMeal(null);
+    setOpen(true);
+  }
+
   const handleEdit = (meal: Meal) => {
     setEditingMeal(meal);
     setOpen(true);
@@ -52,11 +58,6 @@ export default function MealsPage() {
   const handleDelete = async (id: number) => {
     if (!confirm("Tem certeza que deseja excluir este produto?")) return;
     deleteMutation.mutate(id);
-  };
-
-  const handleAddNew = () => {
-    setEditingMeal(null);
-    setOpen(true);
   };
 
   const handleEditorSuccess = () => {
@@ -134,15 +135,12 @@ export default function MealsPage() {
   }
 
   return (
-    <div className="p-6 w-full">
-      <div className="flex items-center justify-between mb-8">
-        <Heading
-          title="Refeições"
-          description="Faça a gestão das refeições do seu cardápio"
-        />
+    <DashboardSection>
+      <div className="flex items-center justify-between">
+        <Heading title="Refeições" />
         <Button onClick={handleAddNew}>
           <Plus className="mr-2 h-4 w-4" />
-          Criar refeição
+          Criar Refeição
         </Button>
       </div>
 
@@ -159,6 +157,6 @@ export default function MealsPage() {
         editingMeal={editingMeal}
         onSuccess={handleEditorSuccess}
       />
-    </div>
+    </DashboardSection>
   );
 }

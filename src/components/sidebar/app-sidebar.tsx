@@ -110,11 +110,16 @@ export function AppSidebar() {
     });
   };
 
-  const isActive = (url: string) => {
+  const isActive = (pathname: string, url: string) => {
     if (url === "/") {
       return pathname === "/";
     }
-    return pathname.startsWith(url);
+
+    // Remove query params and trailing slashes
+    const cleanPathname = pathname.split("?")[0].replace(/\/$/, "");
+    const cleanUrl = url.split("?")[0].replace(/\/$/, "");
+
+    return cleanPathname === cleanUrl;
   };
 
   return (
@@ -148,7 +153,7 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       asChild
                       disabled={!hasBusinessSelected}
-                      isActive={isActive(item.url)}
+                      isActive={isActive(pathname, item.url)}
                     >
                       <Link href={item.url}>
                         <item.icon />
@@ -173,7 +178,10 @@ export function AppSidebar() {
                 ).map((item) => (
                   // Disabled in case a restaurant is not selected
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive(pathname, item.url)}
+                    >
                       <Link href={item.url}>
                         <item.icon />
                         <span>{item.title}</span>

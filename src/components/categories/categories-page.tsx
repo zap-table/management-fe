@@ -6,7 +6,6 @@ import {
 } from "@/actions/categories.actions";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import { Heading } from "@/components/ui/heading";
 import { useBusiness } from "@/providers/business-provider";
 import { DetailedCategory } from "@/types/categories.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -15,6 +14,7 @@ import { CSSProperties, useState } from "react";
 import { toast } from "sonner";
 import DashboardSection from "../layout/dashboard-section";
 import { Badge } from "../ui/badge";
+import { Heading } from "../ui/heading";
 import { CategoryEditor } from "./categories-editor";
 
 export default function CategoriesPage() {
@@ -48,6 +48,11 @@ export default function CategoriesPage() {
     },
   });
 
+  const handleAddNew = () => {
+    setEditingCategory(null);
+    setOpen(true);
+  };
+
   const handleEdit = (category: DetailedCategory) => {
     setEditingCategory(category);
     setOpen(true);
@@ -56,11 +61,6 @@ export default function CategoriesPage() {
   const handleDelete = async (id: number) => {
     if (!confirm("Tem certeza que deseja excluir esta categoria?")) return;
     deleteMutation.mutate(id);
-  };
-
-  const handleAddNew = () => {
-    setEditingCategory(null);
-    setOpen(true);
   };
 
   const handleDialogSuccess = () => {
@@ -116,14 +116,11 @@ export default function CategoriesPage() {
 
   return (
     <DashboardSection>
-      <div className="flex items-center justify-between mb-4">
-        <Heading
-          title="Categorias"
-          description="Gerencie as categorias do seu cardápio"
-        />
+      <div className="flex items-center justify-between">
+        <Heading title="Categorias" />
         <Button onClick={handleAddNew}>
           <Plus className="mr-2 h-4 w-4" />
-          Adicionar Categoria
+          Criar Categoria
         </Button>
       </div>
 

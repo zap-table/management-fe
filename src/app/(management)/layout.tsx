@@ -1,3 +1,5 @@
+import { DashboardBreadcrumbs } from "@/components/layout/dashboard-breadcrumbs";
+import { DashboardSectionTitle } from "@/components/layout/dashboard-section-title";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth/next";
@@ -18,11 +20,13 @@ export default async function AdminLayout({
     <SidebarInset>
       <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
         <SidebarTrigger className="-ml-1" />
-        <div className="flex flex-1 items-center gap-2">
-          <h1 className="text-lg font-semibold">Dashboard</h1>
-        </div>
+        <DashboardSectionTitle />
       </header>
-      <main className="flex min-h-svh">{children}</main>
+      <main className="flex-1 flex flex-col">
+        <DashboardBreadcrumbs />
+
+        {children}
+      </main>
     </SidebarInset>
   );
 }
