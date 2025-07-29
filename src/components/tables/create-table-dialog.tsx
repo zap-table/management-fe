@@ -38,7 +38,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Checkbox } from "../ui/checkbox";
+import { Switch } from "../ui/switch";
 
 interface CreateTableDialogProps {
   restaurantId: number;
@@ -147,7 +147,7 @@ export function CreateTableDialog({ restaurantId }: CreateTableDialogProps) {
                   <FormLabel>Status</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue>
                           {translateTableStatus(field.value)}
                         </SelectValue>
@@ -169,15 +169,15 @@ export function CreateTableDialog({ restaurantId }: CreateTableDialogProps) {
               control={form.control}
               name="active"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center gap-2">
-                  <FormLabel>Ativo</FormLabel>
+                <FormItem className="flex items-center gap-2">
+                  <FormLabel className="text-sm bold">Mesa ativa</FormLabel>
+
                   <FormControl>
-                    <Checkbox
+                    <Switch
                       checked={field.value}
                       onCheckedChange={field.onChange}
                     />
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
               )}
             />

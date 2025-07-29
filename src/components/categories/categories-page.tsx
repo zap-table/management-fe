@@ -9,11 +9,12 @@ import { DataTable } from "@/components/ui/data-table";
 import { useBusiness } from "@/providers/business-provider";
 import { DetailedCategory } from "@/types/categories.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Trash } from "lucide-react";
+import { Pencil, Plus, Trash } from "lucide-react";
 import { CSSProperties, useState } from "react";
 import { toast } from "sonner";
 import DashboardSection from "../layout/dashboard-section";
 import { Badge } from "../ui/badge";
+import { Heading } from "../ui/heading";
 import { CategoryEditor } from "./categories-editor";
 
 export default function CategoriesPage() {
@@ -46,6 +47,11 @@ export default function CategoriesPage() {
       toast.error("Erro ao excluir categoria");
     },
   });
+
+  const handleAddNew = () => {
+    setEditingCategory(null);
+    setOpen(true);
+  };
 
   const handleEdit = (category: DetailedCategory) => {
     setEditingCategory(category);
@@ -110,6 +116,14 @@ export default function CategoriesPage() {
 
   return (
     <DashboardSection>
+      <div className="flex items-center justify-between">
+        <Heading title="Categorias" />
+        <Button onClick={handleAddNew}>
+          <Plus className="mr-2 h-4 w-4" />
+          Criar Categoria
+        </Button>
+      </div>
+
       <DataTable
         columns={columns}
         data={categories}

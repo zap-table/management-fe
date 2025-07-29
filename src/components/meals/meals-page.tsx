@@ -10,9 +10,11 @@ import { DataTable } from "@/components/ui/data-table";
 import { useBusiness } from "@/providers/business-provider";
 import { Meal } from "@/types/meals.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Trash } from "lucide-react";
+import { Pencil, Plus, Trash } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import DashboardSection from "../layout/dashboard-section";
+import { Heading } from "../ui/heading";
 import { MealsEditor } from "./meals-editor";
 
 export default function MealsPage() {
@@ -42,6 +44,11 @@ export default function MealsPage() {
       toast.error("Erro ao excluir produto");
     },
   });
+
+  function handleAddNew(): void {
+    setEditingMeal(null);
+    setOpen(true);
+  }
 
   const handleEdit = (meal: Meal) => {
     setEditingMeal(meal);
@@ -128,7 +135,15 @@ export default function MealsPage() {
   }
 
   return (
-    <>
+    <DashboardSection>
+      <div className="flex items-center justify-between">
+        <Heading title="Refeições" />
+        <Button onClick={handleAddNew}>
+          <Plus className="mr-2 h-4 w-4" />
+          Criar Refeição
+        </Button>
+      </div>
+
       <DataTable
         columns={columns}
         data={meals}
@@ -142,6 +157,6 @@ export default function MealsPage() {
         editingMeal={editingMeal}
         onSuccess={handleEditorSuccess}
       />
-    </>
+    </DashboardSection>
   );
 }

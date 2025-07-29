@@ -98,7 +98,7 @@ export default function MenusPage() {
 
   return (
     <DashboardSection>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between">
         <Heading title="Menus" />
         <Button onClick={handleAddNew}>
           <Plus className="mr-2 h-4 w-4" />
