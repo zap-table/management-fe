@@ -2,7 +2,7 @@ import { queryTablesByBusinessAndRestaurantId } from "@/lib/http/tables";
 import { Table, TableStatus } from "@/types/tables.types";
 import DashboardSection from "../layout/dashboard-section";
 import { Heading } from "../ui/heading";
-import { TablesFilters } from "./tables-filters";
+import { CreateTableDialog } from "./create-table-dialog";
 import { TablesGrid } from "./tables-grid";
 
 interface TablesPageProps {
@@ -50,10 +50,9 @@ export default async function TablesPage({
 
   return (
     <DashboardSection>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between">
         <Heading title="Mesas" />
-
-        <TablesFilters />
+        <CreateTableDialog />
       </div>
 
       <TablesGrid

@@ -11,7 +11,9 @@ export default function DashboardSection({
   className,
 }: DashboardSectionProps) {
   return (
-    <section className={cn("p-4 pt-2 w-full flex-1", className)}>
+    <section
+      className={cn("flex flex-col p-4 pt-2 w-full flex-1 gap-4", className)}
+    >
       {children}
     </section>
   );

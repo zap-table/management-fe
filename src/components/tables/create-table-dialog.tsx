@@ -14,7 +14,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export function AddTableDialog() {
+export function CreateTableDialog() {
   const [open, setOpen] = useState(false);
   const [tableNumber, setTableNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
