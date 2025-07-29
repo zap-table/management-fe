@@ -15,8 +15,12 @@ export async function TablesGrid({
 }: TablesGridProps) {
   if (!filteredTables || filteredTables.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="text-gray-500 text-lg">Nenhuma mesa encontrada</div>
+      <div className="w-full mx-auto space-y-4">
+        <TablesFilters />
+
+        <div className="text-gray-500 text-lg text-center">
+          Nenhuma mesa encontrada
+        </div>
       </div>
     );
   }
