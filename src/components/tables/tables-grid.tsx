@@ -1,56 +1,22 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { queryTablesByBusinessAndRestaurantId } from "@/lib/http/tables";
-import { Table, TableStatus } from "@/types/tables.types";
+import { Table } from "@/types/tables.types";
 import { TablesGridClient } from "./tables-grid-client";
 
 interface TablesGridProps {
+  filteredTables: Table[];
   businessId: string;
   restaurantId: string;
-  searchQuery: string;
-  statusFilter: TableStatus | "all";
 }
 
 export async function TablesGrid({
+  filteredTables,
   businessId,
   restaurantId,
-  searchQuery,
-  statusFilter,
 }: TablesGridProps) {
-  let tables: Table[] = [];
-  let error: string | null = null;
-
-  try {
-    tables = await queryTablesByBusinessAndRestaurantId(
-      businessId,
-      restaurantId
-    );
-  } catch (e) {
-    error = (e as Error).message;
-  }
-
-  if (error) {
-    return <div>Erro ao carregar mesas: {error}</div>;
-  }
-
-  const filteredTables = tables.filter((table) => {
-    const matchesSearch = table.tableNumber
-      .toString()
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || table.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
   if (!filteredTables || filteredTables.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="text-gray-500 text-lg">Nenhuma mesa encontrada</div>
-        <p className="text-gray-400 mt-2">
-          {searchQuery || statusFilter !== "all"
-            ? "Tente ajustar sua pesquisa ou critérios de filtro"
-            : "Por favor, adicione algumas mesas."}
-        </p>
       </div>
     );
   }
@@ -78,28 +44,28 @@ function TableStatsOverview({ tables }: { tables: Table[] }) {
 
   const stats = [
     {
-      label: "Total Tables",
+      label: "Total",
       value: totalTables,
       color: "text-slate-700",
       bgColor: "bg-slate-50",
       borderColor: "border-slate-200",
     },
     {
-      label: "Available",
+      label: "Disponíveis",
       value: availableTables,
       color: "text-green-700",
       bgColor: "bg-green-50",
       borderColor: "border-green-200",
     },
     {
-      label: "Occupied",
+      label: "Ocupadas",
       value: occupiedTables,
       color: "text-red-700",
       bgColor: "bg-red-50",
       borderColor: "border-red-200",
     },
     {
-      label: "Reserved",
+      label: "Reservadas",
       value: reservedTables,
       color: "text-amber-700",
       bgColor: "bg-amber-50",

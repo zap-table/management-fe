@@ -55,10 +55,7 @@ export default function RestaurantSelectorPage() {
   return (
     <DashboardSection>
       <div className="flex items-center justify-between mb-8">
-        <Heading
-          title="Restaurantes"
-          description="Faça a gestão dos seus restaurantes"
-        />
+        <Heading title="Restaurantes" />
       </div>
 
       <DataTable

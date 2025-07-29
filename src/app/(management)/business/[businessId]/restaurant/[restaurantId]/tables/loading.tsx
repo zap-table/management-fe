@@ -1,6 +1,8 @@
+import DashboardSection from "@/components/layout/dashboard-section";
+
 export default function Loading() {
   return (
-    <div className="p-6 w-full">
+    <DashboardSection>
       <div className="flex items-center justify-between mb-8">
         <div>
           <div className="h-8 w-32 bg-gray-200 animate-pulse rounded mb-2" />
@@ -25,6 +27,6 @@ export default function Loading() {
           <div key={i} className="h-48 bg-gray-200 animate-pulse rounded" />
         ))}
       </div>
-    </div>
+    </DashboardSection>
   );
 }

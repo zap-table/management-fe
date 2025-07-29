@@ -2,7 +2,6 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
-import { Separator } from "@/components/ui/separator";
 import { queryRestaurantById } from "@/lib/http/restaurants";
 import { Restaurant } from "@/types/restaurants.types";
 import { useQuery } from "@tanstack/react-query";
@@ -28,12 +27,8 @@ export function RestaurantHeader({ restaurantId }: RestaurantHeaderProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Heading
-          title={restaurant?.name || "Restaurante"}
-          description="Gestão do estabelecimento"
-        />
+        <Heading title={restaurant?.name || "Restaurante"} />
       </div>
-      <Separator />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardContent className="flex items-center p-4">

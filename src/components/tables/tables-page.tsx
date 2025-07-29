@@ -1,7 +1,9 @@
+import { queryTablesByBusinessAndRestaurantId } from "@/lib/http/tables";
+import { Table, TableStatus } from "@/types/tables.types";
+import DashboardSection from "../layout/dashboard-section";
 import { Heading } from "../ui/heading";
-import { TablesGrid } from "./tables-grid";
 import { TablesFilters } from "./tables-filters";
-import { TableStatus } from "@/types/tables.types";
+import { TablesGrid } from "./tables-grid";
 
 interface TablesPageProps {
   restaurantId: string;
@@ -12,7 +14,7 @@ interface TablesPageProps {
   };
 }
 
-export default function TablesPage({
+export default async function TablesPage({
   restaurantId,
   businessId,
   searchParams,
@@ -20,23 +22,45 @@ export default function TablesPage({
   const searchQuery = searchParams.search || "";
   const statusFilter = (searchParams.status as TableStatus | "all") || "all";
 
-  return (
-    <div className="p-6 w-full">
-      <div className="flex items-center justify-between mb-8">
-        <Heading
-          title="Mesas"
-          description="Faça a gestão das mesas do seu restaurante"
-        />
+  let tables: Table[] = [];
+  let error: string | null = null;
 
-        <TablesFilters businessId={businessId} restaurantId={restaurantId} />
+  try {
+    tables = await queryTablesByBusinessAndRestaurantId(
+      businessId,
+      restaurantId
+    );
+  } catch (e) {
+    error = (e as Error).message;
+  }
+
+  if (error) {
+    return <div>Erro ao carregar mesas: {error}</div>;
+  }
+
+  const filteredTables = tables.filter((table) => {
+    const matchesSearch = table.tableNumber
+      .toString()
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || table.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  return (
+    <DashboardSection>
+      <div className="flex items-center justify-between mb-8">
+        <Heading title="Mesas" />
+
+        <TablesFilters />
       </div>
 
-      <TablesGrid 
-        businessId={businessId} 
+      <TablesGrid
+        filteredTables={filteredTables}
+        businessId={businessId}
         restaurantId={restaurantId}
-        searchQuery={searchQuery}
-        statusFilter={statusFilter}
       />
-    </div>
+    </DashboardSection>
   );
 }
